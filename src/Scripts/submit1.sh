@@ -1,5 +1,18 @@
 #!/bin/bash
 
+echo `lscpu | grep "^Model name:"`
+echo `lscpu | grep "^CPU(s):"`
+echo `lscpu | grep "^On-line CPU(s) list:"`
+echo `lscpu | grep "^Thread(s) per core:"`
+echo `lscpu | grep "^Core(s) per socket:"`
+echo `lscpu | grep "^Socket(s):"`
+echo `lscpu | grep "^NUMA node(s):"`
+echo `lscpu | grep "^L1d cache:"`
+echo `lscpu | grep "^L1i cache:"`
+echo `lscpu | grep "^L2 cache:"`
+echo `lscpu | grep "^L3 cache:"`
+echo `cat /proc/meminfo | grep "^MemTotal"`
+
 echo "----------------------------------------------------------"
 echo "MPI F90 Version (Before setvars.sh):"
 echo "----------------------------------------------------------"
