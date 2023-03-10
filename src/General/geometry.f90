@@ -1455,7 +1455,7 @@ contains
           end do
           if (n_cut == -1) then
               write(*,*) "geometry.f90: DOESNT INTERSECT"
-              write(*,*), x11,y11,x12,y12,x21,y21,x22,y22
+              write(*,*) x11,y11,x12,y12,x21,y21,x22,y22
               stop
               return
           end if
