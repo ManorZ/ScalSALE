@@ -771,7 +771,26 @@ contains
 
 
     end subroutine Calculate_acceleration_2d
-
+    
+    !subroutine Calculate_acceleration_1d(inversed_vertex_mass, dt_mid, ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8, a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6, acceleration)
+    !!$omp declare simd uniform(inversed_vertex_mass, dt_mid)
+    !    real(8), intent(in) :: inversed_vertex_mass
+    !    real(8), intent(in) :: dt_mid
+    !    real(8), intent(in) :: ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8
+    !    real(8), intent(in) :: a1, a2, a3, a4, a5, a6
+    !    real(8), intent(in) :: b1, b2, b3, b4, b5, b6
+    !    real(8), intent(out) :: acceleration
+    !    acceleration = -0.25d0 * inversed_vertex_mass * dt_mid * &
+    !        (ps1 * ((a2 - a1) * (b3 - b1) - (b2 - b1) * (a3 - a1)) &
+    !        +ps2 * ((a6 - a1) * (b2 - b1) - (b6 - b1) * (a2 - a1)) &
+    !        +ps3 * ((a3 - a4) * (b2 - b4) - (b3 - b4) * (a2 - a4)) &
+    !        +ps4 * ((a2 - a4) * (b6 - b4) - (b2 - b4) * (a6 - a4)) &
+    !        +ps5 * ((a1 - a5) * (b3 - b5) - (b1 - b5) * (a3 - a5)) &
+    !        +ps6 * ((a6 - a5) * (b1 - b5) - (b6 - b5) * (a1 - a5)) &
+    !        +ps7 * ((a5 - a4) * (b3 - b4) - (b5 - b4) * (a3 - a4)) &
+    !        +ps8 * ((a6 - a4) * (b5 - b4) - (b6 - b4) * (a5 - a4)))
+    !end subroutine Calculate_acceleration_1d
+        
     subroutine Calculate_acceleration_3d(this, dt_mid)
         class (hydro_step_t), intent(in out) :: this
         real(8), intent(in) :: dt_mid         
@@ -790,10 +809,13 @@ contains
         integer :: ip,im,jp,jm,kp,km            
         real(8) :: x1, x2, x3, x4, x5, x6  
         real(8) :: y1, y2, y3, y4, y5, y6  
-        real(8) :: z1, z2, z3, z4, z5, z6  
+        real(8) :: z1, z2, z3, z4, z5, z6
+        real(8) :: ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8
 
 
-
+        !integer :: num_omp_threads = 6
+        integer :: num_omp_threads = 12
+        !integer :: num_omp_threads = 24
 
 
 
@@ -803,10 +825,10 @@ contains
         call this%total_pressure_sum  %Point_to_data(pressure_sum)
         call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
 
+        call omp_set_num_threads(num_omp_threads)
 
-
-
-
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
+        !$omp parallel do      collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -837,43 +859,83 @@ contains
                     z4 = z(im, j, k)
                     z5 = z(i, jm, k)
                     z6 = z(i, j, km)
+                    
+                    ps1 = pressure_sum(i, j, k)
+                    ps2 = pressure_sum(i, j, km)
+                    ps3 = pressure_sum(im, j, k)
+                    ps4 = pressure_sum(im, j, km)
+                    ps5 = pressure_sum(i, jm, k)
+                    ps6 = pressure_sum(i, jm, km)
+                    ps7 = pressure_sum(im, jm, k)
+                    ps8 = pressure_sum(im, jm, km)
 
+                    !acceleration_x(i, j, k) = -0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
+                    !    (pressure_sum(i  , j  , k ) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1)) &
+                    !    +pressure_sum(i  , j  , km) * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2 - y1)) &
+                    !    +pressure_sum(im , j  , k ) * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2 - y4)) &
+                    !    +pressure_sum(im , j  , km) * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6 - y4)) &
+                    !    +pressure_sum(i  , jm , k ) * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3 - y5)) &
+                    !    +pressure_sum(i  , jm , km) * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1 - y5)) &
+                    !    +pressure_sum(im , jm , k ) * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3 - y4)) &
+                    !    +pressure_sum(im , jm , km) * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5 - y4)))
                     acceleration_x(i, j, k) = -0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
-                        (pressure_sum(i  , j  , k ) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1)) &
-                        +pressure_sum(i  , j  , km) * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2 - y1)) &
-                        +pressure_sum(im , j  , k ) * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2 - y4)) &
-                        +pressure_sum(im , j  , km) * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6 - y4)) &
-                        +pressure_sum(i  , jm , k ) * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3 - y5)) &
-                        +pressure_sum(i  , jm , km) * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1 - y5)) &
-                        +pressure_sum(im , jm , k ) * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3 - y4)) &
-                        +pressure_sum(im , jm , km) * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5 - y4)))
+                        (ps1 * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1)) &
+                        +ps2 * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2 - y1)) &
+                        +ps3 * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2 - y4)) &
+                        +ps4 * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6 - y4)) &
+                        +ps5 * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3 - y5)) &
+                        +ps6 * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1 - y5)) &
+                        +ps7 * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3 - y4)) &
+                        +ps8 * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5 - y4)))
+                    !call Calculate_acceleration_1d(inversed_vertex_mass(i, j, k), dt_mid, ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8, y1, y2, y3, y4, y5, y6, z1, z2, z3, z4, z5, z6, acceleration_x(i, j, k))
 
 
+                    !acceleration_y(i, j, k) = -0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
+                    !    (pressure_sum(i  , j , k ) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
+                    !    +pressure_sum(i  , j , km) * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
+                    !    +pressure_sum(im , j , k ) * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
+                    !    +pressure_sum(im , j , km) * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
+                    !    +pressure_sum(i  , jm, k ) * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
+                    !    +pressure_sum(i  , jm, km) * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
+                    !    +pressure_sum(im , jm, k ) * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
+                    !    +pressure_sum(im , jm, km) * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
                     acceleration_y(i, j, k) = -0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
-                        (pressure_sum(i  , j , k ) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
-                        +pressure_sum(i  , j , km) * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
-                        +pressure_sum(im , j , k ) * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
-                        +pressure_sum(im , j , km) * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
-                        +pressure_sum(i  , jm, k ) * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
-                        +pressure_sum(i  , jm, km) * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
-                        +pressure_sum(im , jm, k ) * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
-                        +pressure_sum(im , jm, km) * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
+                        (ps1 * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
+                        +ps2 * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
+                        +ps3 * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
+                        +ps4 * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
+                        +ps5 * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
+                        +ps6 * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
+                        +ps7 * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
+                        +ps8 * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
+                    !call Calculate_acceleration_1d(inversed_vertex_mass(i, j, k), dt_mid, ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8, z1, z2, z3, z4, z5, z6, x1, x2, x3, x4, x5, x6, acceleration_y(i, j, k))
 
+                    !acceleration_z(i, j, k) = 0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
+                    !    (-pressure_sum(i , j , k ) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
+                    !    -pressure_sum(i , j , km) * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
+                    !    -pressure_sum(im, j , k ) * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
+                    !    -pressure_sum(im, j , km) * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
+                    !    -pressure_sum(i , jm, k ) * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
+                    !    -pressure_sum(i , jm, km) * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
+                    !    -pressure_sum(im, jm, k ) * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
+                    !    -pressure_sum(im, jm, km) * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4)))
                     acceleration_z(i, j, k) = 0.25d0 * inversed_vertex_mass(i, j, k) * dt_mid * &
-                        (-pressure_sum(i , j , k ) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
-                        -pressure_sum(i , j , km) * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
-                        -pressure_sum(im, j , k ) * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
-                        -pressure_sum(im, j , km) * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
-                        -pressure_sum(i , jm, k ) * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
-                        -pressure_sum(i , jm, km) * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
-                        -pressure_sum(im, jm, k ) * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
-                        -pressure_sum(im, jm, km) * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4)))
-
+                        (-ps1 * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
+                        -ps2 * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
+                        -ps3 * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
+                        -ps4 * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
+                        -ps5 * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
+                        -ps6 * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
+                        -ps7 * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
+                        -ps8 * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4)))
+                    !call Calculate_acceleration_1d(inversed_vertex_mass(i, j, k), dt_mid, -ps1, -ps2, -ps3, -ps4, -ps5, -ps6, -ps7, -ps8, x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, acceleration_z(i, j, k))
 
 
                 end do
             end do
         end do
+        !$omp end parallel do
+        !!$omp end parallel do simd
 
 
 
@@ -1357,6 +1419,26 @@ contains
 
     end subroutine Calculate_velocity_2d
 
+    !subroutine Calculate_velocity_1d(velocity, acceleration, inversed_vertex_mass, dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6)
+    !!$omp declare simd uniform(inversed_vertex_mass, dt_mid)
+    !    real(8), intent(in out) :: velocity
+    !    real(8), intent(in) :: acceleration
+    !    real(8), intent(in) :: inversed_vertex_mass
+    !    real(8), intent(in) :: dt_mid
+    !    real(8), intent(in) :: av1, av2, av3, av4, av5, av6, av7, av8
+    !    real(8), intent(in) :: a1, a2, a3, a4, a5, a6
+    !    real(8), intent(in) :: b1, b2, b3, b4, b5, b6
+    !    velocity = velocity + acceleration + dt_mid * 0.25d0 * inversed_vertex_mass * &
+    !                   (-av1 * ((a2 - a1) * (b3 - b1) - (b2 - b1) * (a3-a1)) &
+    !                    -av2 * ((a6 - a1) * (b2 - b1) - (b6 - b1) * (a2-a1)) &
+    !                    -av3 * ((a3 - a4) * (b2 - b4) - (b3 - b4) * (a2-a4)) &
+    !                    -av4 * ((a2 - a4) * (b6 - b4) - (b2 - b4) * (a6-a4)) &
+    !                    -av5 * ((a1 - a5) * (b3 - b5) - (b1 - b5) * (a3-a5)) &
+    !                    -av6 * ((a6 - a5) * (b1 - b5) - (b6 - b5) * (a1-a5)) &
+    !                    -av7 * ((a5 - a4) * (b3 - b4) - (b5 - b4) * (a3-a4)) &
+    !                    -av8 * ((a6 - a4) * (b5 - b4) - (b6 - b4) * (a5-a4)))
+    !end subroutine Calculate_velocity_1d
+
 
     subroutine Calculate_velocity_3d(this, dt_mid)
         class (hydro_step_t), intent(in out) :: this
@@ -1377,7 +1459,12 @@ contains
         real(8) :: x1, x2, x3, x4, x5, x6, x7, x8  
         real(8) :: y1, y2, y3, y4, y5, y6, y7, y8  
         real(8) :: z1, z2, z3, z4, z5, z6, z7, z8  
-        real(8) :: r1, r2, r3, r4, r5, r6, r7, r8  
+        real(8) :: r1, r2, r3, r4, r5, r6, r7, r8
+        real(8) :: av1, av2, av3, av4, av5, av6, av7, av8
+        
+        !integer :: num_omp_threads = 6
+        integer :: num_omp_threads = 12
+        !integer :: num_omp_threads = 24
 
         call this%acceleration   %Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%velocity       %Point_to_data(velocity_x, velocity_y, velocity_z)
@@ -1388,6 +1475,9 @@ contains
         call this%a_visc         %Point_to_data(a_visc)
 
         call this%a_visc%Exchange_end()
+        call omp_set_num_threads(num_omp_threads)
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
+        !$omp parallel do      collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -1418,41 +1508,83 @@ contains
                     z4 = z(im, j, k)
                     z5 = z(i, jm, k)
                     z6 = z(i, j, km)
+                    
+                    av1 = a_visc(i, j, k)
+                    av2 = a_visc(i, j, km)
+                    av3 = a_visc(im, j, k)
+                    av4 = a_visc(im, j, km)
+                    av5 = a_visc(i, jm, k)
+                    av6 = a_visc(i, jm, km)
+                    av7 = a_visc(im, jm, k)
+                    av8 = a_visc(im, jm, km)
 
+                    !velocity_x(i, j, k) = velocity_x(i, j, k) + acceleration_x(i, j, k) + &
+                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
+                    !    (-a_visc(i , j , k ) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3-y1)) &
+                    !    -a_visc(i , j , km) * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2-y1)) &
+                    !    -a_visc(im, j , k ) * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2-y4)) &
+                    !    -a_visc(im, j , km) * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6-y4)) &
+                    !    -a_visc(i , jm, k ) * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3-y5)) &
+                    !    -a_visc(i , jm, km) * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1-y5)) &
+                    !    -a_visc(im, jm, k ) * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3-y4)) &
+                    !    -a_visc(im, jm, km) * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5-y4)))
                     velocity_x(i, j, k) = velocity_x(i, j, k) + acceleration_x(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                        (-a_visc(i , j , k ) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3-y1)) &
-                        -a_visc(i , j , km) * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2-y1)) &
-                        -a_visc(im, j , k ) * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2-y4)) &
-                        -a_visc(im, j , km) * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6-y4)) &
-                        -a_visc(i , jm, k ) * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3-y5)) &
-                        -a_visc(i , jm, km) * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1-y5)) &
-                        -a_visc(im, jm, k ) * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3-y4)) &
-                        -a_visc(im, jm, km) * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5-y4)))
+                       (-av1 * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3-y1)) &
+                        -av2 * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2-y1)) &
+                        -av3 * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2-y4)) &
+                        -av4 * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6-y4)) &
+                        -av5 * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3-y5)) &
+                        -av6 * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1-y5)) &
+                        -av7 * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3-y4)) &
+                        -av8 * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5-y4)))
+                    !call Calculate_velocity_1d(velocity_x(i, j, k), acceleration_x(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, y1, y2, y3, y4, y5, y6, z1, z2, z3, z4, z5, z6)
 
 
 
+                    !velocity_y(i, j, k) = velocity_y(i, j, k) + acceleration_y(i, j, k) + &
+                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
+                    !    (-a_visc(i , j , k ) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
+                    !    -a_visc(i , j , km) * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
+                    !    -a_visc(im, j , k ) * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
+                    !    -a_visc(im, j , km) * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
+                    !    -a_visc(i , jm, k ) * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
+                    !    -a_visc(i , jm, km) * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
+                    !    -a_visc(im, jm, k ) * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
+                    !    -a_visc(im, jm, km) * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
                     velocity_y(i, j, k) = velocity_y(i, j, k) + acceleration_y(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                        (-a_visc(i , j , k ) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
-                        -a_visc(i , j , km) * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
-                        -a_visc(im, j , k ) * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
-                        -a_visc(im, j , km) * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
-                        -a_visc(i , jm, k ) * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
-                        -a_visc(i , jm, km) * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
-                        -a_visc(im, jm, k ) * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
-                        -a_visc(im, jm, km) * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
+                       (-av1 * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
+                        -av2 * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
+                        -av3 * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
+                        -av4 * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
+                        -av5 * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
+                        -av6 * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
+                        -av7 * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
+                        -av8 * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
+                    !call Calculate_velocity_1d(velocity_y(i, j, k), acceleration_y(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, z1, z2, z3, z4, z5, z6, x1, x2, x3, x4, x5, x6)
 
+                    !velocity_z(i, j, k) = velocity_z(i, j, k) + (acceleration_z(i, j, k) + &
+                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
+                    !    (-a_visc(i , j , k ) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
+                    !    -a_visc(i , j , km) * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
+                    !    -a_visc(im, j , k ) * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
+                    !    -a_visc(im, j , km) * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
+                    !    -a_visc(i , jm, k ) * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
+                    !    -a_visc(i , jm, km) * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
+                    !    -a_visc(im, jm, k ) * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
+                    !    -a_visc(im, jm, km) * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4))))
                     velocity_z(i, j, k) = velocity_z(i, j, k) + (acceleration_z(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                        (-a_visc(i , j , k ) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
-                        -a_visc(i , j , km) * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
-                        -a_visc(im, j , k ) * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
-                        -a_visc(im, j , km) * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
-                        -a_visc(i , jm, k ) * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
-                        -a_visc(i , jm, km) * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
-                        -a_visc(im, jm, k ) * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
-                        -a_visc(im, jm, km) * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4))))
+                       (-av1 * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
+                        -av2 * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
+                        -av3 * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
+                        -av4 * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
+                        -av5 * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
+                        -av6 * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
+                        -av7 * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
+                        -av8 * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4))))
+                    !call Calculate_velocity_1d(velocity_z(i, j, k), acceleration_z(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6)
 
 
 
@@ -1460,6 +1592,8 @@ contains
                 end do
             end do
         end do
+        !$omp end parallel do
+        !!$omp end parallel do simd
 
         if (this%mesh%mesh_type /= 2) then
             call this%velocity%Impose_spherical_symmetry(this%mesh%coordinates)
