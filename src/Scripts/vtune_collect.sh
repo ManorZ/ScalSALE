@@ -21,6 +21,7 @@
 #type=sgx-hotspots
 
 type=$1
+report_dir=$2
 
 # export I_MPI_F90=ifort
 source /opt/intel/inteloneapi/setvars.sh
@@ -33,4 +34,4 @@ echo "Vtune Collect $type"
 vtune -collect $type -result-dir vtune_data $(pwd)/run1.sh
 
 echo "Vtune Summary Report"
-vtune -report summary -result-dir vtune_data -format html -report-output $(pwd)/summary1/${type}.html
+vtune -report summary -result-dir vtune_data -format html -report-output $(pwd)/${report_dir}/${type}.html

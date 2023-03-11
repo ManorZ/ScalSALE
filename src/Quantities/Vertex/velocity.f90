@@ -126,6 +126,7 @@ contains
 
 
     subroutine Calculate_derivatives(this, coordinates, total_vof, total_volume, nx, ny, nz, emf)
+        !use omp_lib
         use geometry_module, only : Vector_grad
         use geometry_module, only : Vector_grad_planes, Vector_grad_vec
         use volume_module                   , only : volume_t
@@ -171,6 +172,8 @@ contains
         integer :: i, j, k  
         integer :: ip,im,jp,jm, km,kp
         integer,save :: cntr = 0
+
+        !integer :: num_omp_threads = 12
 
         real(8) :: u1u2u4, u1u4u5, u1u2u5, u2u3u1, u2u1u6, u2u3u6, u3u4u2, &
             u3u2u7, u3u4u7, u4u1u3, u4u3u8, u4u1u8, u5u8u6, u5u6u1, &
@@ -223,6 +226,9 @@ contains
         call total_vof   %Point_to_data(vof)
         call total_volume%Point_to_data(vol)
 
+        !call omp_set_num_threads(num_omp_threads)
+
+        !!$omp parallel do collapse(3)
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -440,6 +446,7 @@ contains
                 end do
             end do
         end do
+        !!$omp end parallel do
         cntr = cntr  + 1
     end subroutine Calculate_derivatives
 
