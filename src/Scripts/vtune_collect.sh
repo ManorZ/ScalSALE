@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #vtune
-type=hotspots
+# type=hotspots
 #type=memory-consumption
 #type=uarch-exploration
 #type=memory-access
@@ -19,6 +19,8 @@ type=hotspots
 #type=tsx-exploration
 #type=tsx-hotspots
 #type=sgx-hotspots
+
+type=$1
 
 # export I_MPI_F90=ifort
 source /opt/intel/inteloneapi/setvars.sh
