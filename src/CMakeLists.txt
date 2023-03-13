@@ -13,21 +13,13 @@ add_definitions($ENV{DEFS})
 message(STATUS "CMAKE_Fortran_COMPILER_ID=${CMAKE_Fortran_COMPILER_ID}")
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 set(ENV{JSONFORTRAN} "/home/u177183/json-fortran/build")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O0 -ffree-line-length-512")
-
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O2 -ffree-line-length-512")
-
+set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O0 -ffree-line-length-512")
 #set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512")
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512 -mavx2")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512 -mavx512f")
-
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512 -march=native")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512 -ffast-math")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O3 -ffree-line-length-512 -march=native -ffast-math")
 
 else()
 set(ENV{JSONFORTRAN} "/home/u177183/json-fortran/build")
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -g -qopenmp ")
+set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O0 -g -qopenmp ")
+#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -g -qopenmp ")
 endif()
 message(STATUS "CMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}")
 
