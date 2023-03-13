@@ -1,0 +1,111 @@
+ifort version 2021.8.0
+rm: cannot remove './clean': No such file or directory
+rm: cannot remove './clean.err': No such file or directory
+rm: cannot remove './clean.out': No such file or directory
+rm: cannot remove './clean.sh': No such file or directory
+rm: cannot remove './diags0': No such file or directory
+rm: cannot remove './diff_results.sh': No such file or directory
+rm: cannot remove './gnu_parallel': No such file or directory
+rm: cannot remove './gnu_serial': No such file or directory
+rm: cannot remove './ifort_parallel': No such file or directory
+rm: cannot remove './ifort_serial': No such file or directory
+rm: cannot remove './make_no_run.sh': No such file or directory
+rm: cannot remove './make.sh': No such file or directory
+rm: cannot remove './module_load.sh': No such file or directory
+rm: cannot remove './q-cpu': No such file or directory
+rm: cannot remove './q-run1_wrapper.sh': No such file or directory
+rm: cannot remove './run1.err': No such file or directory
+rm: cannot remove './run1.out': No such file or directory
+rm: cannot remove './run1.sh': No such file or directory
+rm: cannot remove './run1_wrapper.sh': No such file or directory
+rm: cannot remove './run_eclipse_debug.sh': No such file or directory
+rm: cannot remove './run_eclipse.sh': No such file or directory
+rm: cannot remove './run.py': No such file or directory
+rm: cannot remove './run.sh': No such file or directory
+rm: cannot remove './run_slurm.sh': No such file or directory
+rm: cannot remove './scr_clean.sh': No such file or directory
+rm: cannot remove './scr_clear_index.sh': No such file or directory
+rm: cannot remove './script.sh': No such file or directory
+rm: cannot remove './slurm_run.py': No such file or directory
+rm: cannot remove './submit1.sh': No such file or directory
+rm: cannot remove './validate_result.ipynb': No such file or directory
+rm: cannot remove './vtune_collect.sh': No such file or directory
+rm: cannot remove './vtune_data': No such file or directory
+CMake Warning at CMakeLists.txt:277 (message):
+  FORD not found! Please set the CMake cache variable FORD to point to the
+  installed FORD executable, and reconfigure or disable building the
+  documentation.  FORD can be installed from PYPI with `pip install ford` or
+  from <https://github.com/Fortran-FOSS-Programmers/ford> If you do not wish
+  to install FORD and build the JSON-Fortran documentation, then please set
+  the CMake cache variable SKIP_DOC_GEN to TRUE.
+
+
+/home/u177183/json-fortran/build
+ifort: command line warning #10434: option '-nofor_main' use with underscore is deprecated; use '-nofor-main' instead
+/home/u177183/ScalSALE/src/General/data.f90(124): warning #6178: The return value of this FUNCTION has not been defined.   [CONSTRUCTOR_INIT_ARR_IS_PARALLEL]
+   type(data_t) function Constructor_init_arr_is_parallel(initial_data, d1, d2, d3, is_parallel)
+-------------------------^
+/home/u177183/ScalSALE/src/General/data.f90(134): warning #6178: The return value of this FUNCTION has not been defined.   [CONSTRUCTOR_NO_INIT_IS_PARALLEL]
+   type(data_t) function Constructor_no_init_is_parallel(d1, d2, d3, is_parallel)
+-------------------------^
+/home/u177183/ScalSALE/src/General/data.f90(143): warning #6178: The return value of this FUNCTION has not been defined.   [CONSTRUCTOR_INIT_VAL_IS_PARALLEL]
+   type(data_t) function Constructor_init_val_is_parallel(initial_val, d1, d2, d3, is_parallel)
+-------------------------^
+/home/u177183/ScalSALE/src/General/data.f90(153): warning #6178: The return value of this FUNCTION has not been defined.   [CONSTRUCTOR_IS_PARALLEL]
+   type(data_t) function Constructor_is_parallel(is_parallel)
+-------------------------^
+/home/u177183/ScalSALE/src/General/geometry.f90(185): warning #6178: The return value of this FUNCTION has not been defined.   [AREA_]
+   function Area(xl1, yl1, xl2, yl2, xl3, yl3, xl4, yl4) result (area_)
+-----------------------------------------------------------------^
+/home/u177183/ScalSALE/src/General/geometry.f90(820): warning #6178: The return value of this FUNCTION has not been defined.   [INSIDE]
+   function Inside1(xc, yc, x1, y1, dmf2) result (inside)
+--------------------------------------------------^
+/home/u177183/ScalSALE/src/General/geometry.f90(825): warning #6178: The return value of this FUNCTION has not been defined.   [INSIDE_R]
+   function Inside_robust(xc, yc, x1, y1, dmf2) result (inside_r)
+--------------------------------------------------------^
+ifort: command line warning #10434: option '-nofor_main' use with underscore is deprecated; use '-nofor-main' instead
+/home/u177183/ScalSALE/src/Quantities/quantity.f90(432): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Read_quantity_abstract(this, unit, iostat, iomsg)
+--------------------------------------------------^
+/home/u177183/ScalSALE/src/Quantities/quantity.f90(391): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Write_quantity_abstract(this, unit, iostat, iomsg)
+---------------------------------------------------^
+/home/u177183/ScalSALE/src/Mesh/mesh_base.f90(370): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Read_mesh_abstract(this, unit, iostat, iomsg)
+----------------------------------------------^
+/home/u177183/ScalSALE/src/Mesh/mesh_base.f90(287): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Write_mesh_abstract(this, unit, iostat, iomsg)
+-----------------------------------------------^
+/home/u177183/ScalSALE/src/Material/material_base.f90(167): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+   subroutine Read_material_base(this, unit, iostat, iomsg)
+---------------------------------------------^
+/home/u177183/ScalSALE/src/Material/material_base.f90(160): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+   subroutine Read_material_abstract(this, unit, iostat, iomsg)
+-------------------------------------------------^
+/home/u177183/ScalSALE/src/Material/material_base.f90(131): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+   subroutine Write_material_base(this, unit, iostat, iomsg)
+----------------------------------------------^
+/home/u177183/ScalSALE/src/Material/material_base.f90(124): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+   subroutine Write_material_abstract(this, unit, iostat, iomsg)
+--------------------------------------------------^
+/home/u177183/ScalSALE/src/Material/material.f90(311): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Read_material(this, unit, iostat, iomsg)
+-----------------------------------------^
+/home/u177183/ScalSALE/src/Material/material.f90(266): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Write_material(this, unit, iostat, iomsg)
+------------------------------------------^
+/home/u177183/ScalSALE/src/Rezone_and_Advect/advect.f90(3611): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Read_advect(this, unit, iostat, iomsg)
+---------------------------------------^
+/home/u177183/ScalSALE/src/Rezone_and_Advect/advect.f90(3599): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Write_advect(this, unit, iostat, iomsg)
+----------------------------------------^
+/home/u177183/ScalSALE/src/Time_step/hydro_step.f90(2735): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Read_hydro_step(this, unit, iostat, iomsg)
+-------------------------------------------^
+/home/u177183/ScalSALE/src/Time_step/hydro_step.f90(2704): warning #6843: A dummy argument with an explicit INTENT(OUT) declaration is not given an explicit value.   [IOSTAT]
+    subroutine Write_hydro_step(this, unit, iostat, iomsg)
+--------------------------------------------^
+ifort: command line warning #10434: option '-nofor_main' use with underscore is deprecated; use '-nofor-main' instead
+mv: cannot stat 'q-run1_wrapper.sh.e*': No such file or directory
+mv: cannot stat 'q-run1_wrapper.sh.o*': No such file or directory
