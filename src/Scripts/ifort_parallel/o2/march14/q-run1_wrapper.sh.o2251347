@@ -1,0 +1,276 @@
+
+########################################################################
+#      Date:           Tue 14 Mar 2023 11:27:43 AM PDT
+#    Job ID:           2251347.v-qsvr-1.aidevcloud
+#      User:           u177183
+# Resources:           cput=75:00:00,neednodes=1:gold6128:ppn=2,nodes=1:gold6128:ppn=2,walltime=06:00:00
+########################################################################
+
+-----------------------------------------------------------------------------------------------------
+dir=ifort_parallel/o2/march14 tag=q compiler=ifort
+-----------------------------------------------------------------------------------------------------
+Model name: Intel(R) Xeon(R) Gold 6128 CPU @ 3.40GHz
+CPU(s): 24
+On-line CPU(s) list: 0-23
+Thread(s) per core: 2
+Core(s) per socket: 6
+Socket(s): 2
+NUMA node(s): 2
+L1d cache: 384 KiB
+L1i cache: 384 KiB
+L2 cache: 12 MiB
+L3 cache: 38.5 MiB
+MemTotal: 197767144 kB
+-----------------------------------------------------------------------------------------------------
+compiling with ifort
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+I_MPI_F90=ifort
+-----------------------------------------------------------------------------------------------------
+ 
+:: initializing oneAPI environment ...
+   2251347.v-qsvr-1.aidevcloud.SC: BASH_VERSION = 5.0.17(1)-release
+   args: Using "$@" for setvars.sh arguments: 
+:: advisor -- latest
+:: ccl -- latest
+:: clck -- latest
+:: compiler -- latest
+:: dal -- latest
+:: debugger -- latest
+:: dev-utilities -- latest
+:: dnnl -- latest
+:: dpcpp-ct -- latest
+:: dpl -- latest
+:: embree -- latest
+:: inspector -- latest
+:: intelpython -- latest
+:: ipp -- latest
+:: ippcp -- latest
+:: ipp -- latest
+:: ispc -- latest
+:: itac -- latest
+:: mkl -- latest
+:: modelzoo -- latest
+:: modin -- latest
+:: mpi -- latest
+:: neural-compressor -- latest
+:: oidn -- latest
+:: openvkl -- latest
+:: ospray -- latest
+:: ospray_studio -- latest
+:: pytorch -- latest
+:: rkcommon -- latest
+:: rkutil -- latest
+:: tbb -- latest
+:: tensorflow -- latest
+:: vpl -- latest
+:: vtune -- latest
+:: oneAPI environment initialized ::
+ 
+mpif90 for the Intel(R) MPI Library 2021.8 for Linux*
+Copyright Intel Corporation.
+-----------------------------------------------------------------------------------------------------
+cd ~/json-fortran/build
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+pwd
+-----------------------------------------------------------------------------------------------------
+/home/u177183/json-fortran/build
+-----------------------------------------------------------------------------------------------------
+-cmake
+-----------------------------------------------------------------------------------------------------
+-- CMake build configuration for JSON-Fortran 8.3.0
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/u177183/json-fortran/build
+-----------------------------------------------------------------------------------------------------
+-make
+-----------------------------------------------------------------------------------------------------
+[ 46%] Built target jsonfortran
+[100%] Built target jsonfortran-static
+-----------------------------------------------------------------------------------------------------
+cd ~/ScalSALE/src/Scripts
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+pwd
+-----------------------------------------------------------------------------------------------------
+/home/u177183/ScalSALE/src/Scripts
+-----------------------------------------------------------------------------------------------------
+-rm ../exec/main
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+-clean
+-----------------------------------------------------------------------------------------------------
+@@@@ INTEL @@@@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The Fortran compiler identification is Intel 20.2.8.20221119
+-- Check for working Fortran compiler: /glob/development-tools/versions/oneapi/2023.0.1/oneapi/mpi/2021.8.0/bin/mpif90
+-- Check for working Fortran compiler: /glob/development-tools/versions/oneapi/2023.0.1/oneapi/mpi/2021.8.0/bin/mpif90  -- works
+-- Detecting Fortran compiler ABI info
+-- Detecting Fortran compiler ABI info - done
+-- Checking whether /glob/development-tools/versions/oneapi/2023.0.1/oneapi/mpi/2021.8.0/bin/mpif90 supports Fortran 90
+-- Checking whether /glob/development-tools/versions/oneapi/2023.0.1/oneapi/mpi/2021.8.0/bin/mpif90 supports Fortran 90 -- yes
+-- CMAKE_Fortran_COMPILER_ID=Intel
+-- CMAKE_Fortran_FLAGS=-fPIC -cpp -fpp -O2 -g -qopenmp 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/u177183/ScalSALE/build
+Scanning dependencies of target Parallel
+[  1%] Building Fortran object Parallel/CMakeFiles/Parallel.dir/communication_parameters.f90.o
+[  2%] Building Fortran object Parallel/CMakeFiles/Parallel.dir/communication_utils.f90.o
+[  3%] Building Fortran object Parallel/CMakeFiles/Parallel.dir/parallel_parameters.f90.o
+[  5%] Building Fortran object Parallel/CMakeFiles/Parallel.dir/communication.f90.o
+[  6%] Linking Fortran shared library ../lib/libParallel.so
+[  6%] Built target Parallel
+Scanning dependencies of target General
+[  7%] Building Fortran object General/CMakeFiles/General.dir/constants.f90.o
+[  9%] Building Fortran object General/CMakeFiles/General.dir/data.f90.o
+[ 10%] Building Fortran object General/CMakeFiles/General.dir/data_4d.f90.o
+[ 11%] Building Fortran object General/CMakeFiles/General.dir/general_utils.f90.o
+[ 12%] Building Fortran object General/CMakeFiles/General.dir/geometry.f90.o
+[ 14%] Linking Fortran shared library ../lib/libGeneral.so
+[ 14%] Built target General
+Scanning dependencies of target Input
+[ 15%] Building Fortran object Input/CMakeFiles/Input.dir/defaults.f90.o
+[ 16%] Building Fortran object Input/CMakeFiles/Input.dir/replace_words.f90.o
+[ 18%] Building Fortran object Input/CMakeFiles/Input.dir/datafile_object.f90.o
+[ 19%] Linking Fortran static library ../archive/libInput.a
+[ 19%] Built target Input
+Scanning dependencies of target BC
+[ 20%] Building Fortran object Boundary_conditions/CMakeFiles/BC.dir/boundary_parameters.f90.o
+[ 22%] Linking Fortran static library ../archive/libBC.a
+[ 22%] Built target BC
+Scanning dependencies of target Quantities
+[ 23%] Building Fortran object Quantities/CMakeFiles/Quantities.dir/quantity.f90.o
+[ 24%] Linking Fortran static library ../archive/libQuantities.a
+[ 24%] Built target Quantities
+Scanning dependencies of target BC_Vertex
+[ 25%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/vertex_boundary_condition.f90.o
+[ 27%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/boundary_mirror_2d.f90.o
+[ 28%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/boundary_mirror_3d.f90.o
+[ 29%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/lagrange_surface_vertex.f90.o
+[ 31%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/no_slip_vertex_3d.f90.o
+[ 32%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/slip_vertex.f90.o
+[ 33%] Building Fortran object Boundary_conditions/Vertex/CMakeFiles/BC_Vertex.dir/slip_vertex_3d.f90.o
+[ 35%] Linking Fortran static library ../../archive/libBC_Vertex.a
+[ 35%] Built target BC_Vertex
+Scanning dependencies of target BC_Cell
+[ 36%] Building Fortran object Boundary_conditions/Cell/CMakeFiles/BC_Cell.dir/cell_boundary_condition.f90.o
+[ 37%] Building Fortran object Boundary_conditions/Cell/CMakeFiles/BC_Cell.dir/free_surface.f90.o
+[ 38%] Building Fortran object Boundary_conditions/Cell/CMakeFiles/BC_Cell.dir/lagrange_surface_cell.f90.o
+[ 40%] Building Fortran object Boundary_conditions/Cell/CMakeFiles/BC_Cell.dir/slip_cell.f90.o
+[ 41%] Building Fortran object Boundary_conditions/Cell/CMakeFiles/BC_Cell.dir/slip_cell_3d.f90.o
+[ 42%] Linking Fortran static library ../../archive/libBC_Cell.a
+[ 42%] Built target BC_Cell
+Scanning dependencies of target Q_Cell
+[ 44%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/cell_quantity.f90.o
+[ 45%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/materials_in_cells.f90.o
+[ 46%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/density.f90.o
+[ 48%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/vof.f90.o
+[ 49%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/artificial_viscosity.f90.o
+[ 50%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/volume.f90.o
+[ 51%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/cell_mass.f90.o
+[ 53%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/energy.f90.o
+[ 54%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/material_quantity.f90.o
+[ 55%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/num_materials_in_cells.f90.o
+[ 57%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/pressure.f90.o
+[ 58%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/sound_velocity.f90.o
+[ 59%] Building Fortran object Quantities/Cell/CMakeFiles/Q_Cell.dir/temperature.f90.o
+[ 61%] Linking Fortran static library ../../archive/libQ_Cell.a
+[ 61%] Built target Q_Cell
+Scanning dependencies of target Q_Vertex
+[ 62%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/vertex_quantity.f90.o
+[ 63%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/acceleration.f90.o
+[ 64%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/coordinates.f90.o
+[ 66%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/momentum.f90.o
+[ 67%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/velocity.f90.o
+[ 68%] Building Fortran object Quantities/Vertex/CMakeFiles/Q_Vertex.dir/vertex_mass.f90.o
+[ 70%] Linking Fortran static library ../../archive/libQ_Vertex.a
+[ 70%] Built target Q_Vertex
+Scanning dependencies of target Mesh
+[ 71%] Building Fortran object Mesh/CMakeFiles/Mesh.dir/mesh_base.f90.o
+[ 72%] Building Fortran object Mesh/CMakeFiles/Mesh.dir/mesh.f90.o
+[ 74%] Building Fortran object Mesh/CMakeFiles/Mesh.dir/mesh_3d.f90.o
+[ 75%] Linking Fortran static library ../archive/libMesh.a
+[ 75%] Built target Mesh
+Scanning dependencies of target EOS
+[ 76%] Building Fortran object Material/Equation_of_state/CMakeFiles/EOS.dir/equation_of_state.f90.o
+[ 77%] Building Fortran object Material/Equation_of_state/CMakeFiles/EOS.dir/ideal_gas.f90.o
+[ 79%] Linking Fortran static library ../../archive/libEOS.a
+[ 79%] Built target EOS
+Scanning dependencies of target Material
+[ 80%] Building Fortran object Material/CMakeFiles/Material.dir/material_base.f90.o
+[ 81%] Building Fortran object Material/CMakeFiles/Material.dir/material.f90.o
+[ 83%] Building Fortran object Material/CMakeFiles/Material.dir/material_advect.f90.o
+[ 84%] Linking Fortran static library ../archive/libMaterial.a
+[ 84%] Built target Material
+Scanning dependencies of target Rezone_and_Advect
+[ 85%] Building Fortran object Rezone_and_Advect/CMakeFiles/Rezone_and_Advect.dir/rezone.f90.o
+[ 87%] Building Fortran object Rezone_and_Advect/CMakeFiles/Rezone_and_Advect.dir/advect.f90.o
+[ 88%] Linking Fortran static library ../archive/libRezone_and_Advect.a
+[ 88%] Built target Rezone_and_Advect
+Scanning dependencies of target Time_step
+[ 89%] Building Fortran object Time_step/CMakeFiles/Time_step.dir/time.f90.o
+[ 90%] Building Fortran object Time_step/CMakeFiles/Time_step.dir/hydro_step.f90.o
+[ 92%] Linking Fortran static library ../archive/libTime_step.a
+[ 92%] Built target Time_step
+Scanning dependencies of target Diagnostics
+[ 93%] Building Fortran object Diagnostics/CMakeFiles/Diagnostics.dir/textual_diagnostic.f90.o
+[ 94%] Linking Fortran shared library ../lib/libDiagnostics.so
+[ 94%] Built target Diagnostics
+Scanning dependencies of target Main
+[ 96%] Building Fortran object Main/CMakeFiles/Main.dir/problem.f90.o
+[ 97%] Linking Fortran static library ../archive/libMain.a
+[ 97%] Built target Main
+Scanning dependencies of target main
+[ 98%] Building Fortran object Main/CMakeFiles/main.dir/main.f90.o
+[100%] Linking Fortran executable /home/u177183/ScalSALE/src/exec/main
+[100%] Built target main
+-----------------------------------------------------------------------------------------------------
+-run1
+-----------------------------------------------------------------------------------------------------
+ 0
+  making sedov-taylor
+ done mesh
+ Done diagnostics
+ finished building problem
+ Cycle time:    2.69238805770874     
+ Cycle time:    2.68776011466980     
+ Cycle time:    2.59918498992920     
+ Cycle time:    2.74428510665894     
+ Cycle time:    3.46408295631409     
+ Cycle time:    3.30908608436584     
+ Cycle time:    3.01086711883545     
+ Cycle time:    2.57674407958984     
+ Cycle time:    2.90643310546875     
+ Cycle time:    2.70018696784973     
+ Total Time:   28.7244651317596     
+ ncyc:           10
+-----------------------------------------------------------------------------------------------------
+-mv q-run1_wrapper.sh.e* ifort_parallel/o2/march14/q-run1_wrapper_q.sh.e*
+mv q-run1_wrapper.sh.o* ifort_parallel/o2/march14/q-run1_wrapper_q.sh.o*
+mv total_cell_mass_result.txt ifort_parallel/o2/march14/total_cell_mass_result_q.txt
+mv total_pressure_result.txt ifort_parallel/o2/march14/total_pressure_result_q.txt
+mv total_sie_result.txt ifort_parallel/o2/march14/total_sie_result_q.txt
+mv velocity_result.txt ifort_parallel/o2/march14/velocity_result_q.txt
+mv runtime_150_1.txt ifort_parallel/o2/march14/runtime_150_1_q.txt
+-----------------------------------------------------------------------------------------------------
+
+########################################################################
+# End of output for job 2251347.v-qsvr-1.aidevcloud
+# Date: Tue 14 Mar 2023 11:29:52 AM PDT
+########################################################################
+

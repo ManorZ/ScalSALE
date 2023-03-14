@@ -1,0 +1,55 @@
+Using built-in specs.
+COLLECT_GCC=gfortran
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/9/lto-wrapper
+OFFLOAD_TARGET_NAMES=nvptx-none:hsa
+OFFLOAD_TARGET_DEFAULT=1
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 9.4.0-1ubuntu1~20.04.1' --with-bugurl=file:///usr/share/doc/gcc-9/README.Bugs --enable-languages=c,ada,c++,go,brig,d,fortran,objc,obj-c++,gm2 --prefix=/usr --with-gcc-major-version-only --program-suffix=-9 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-9-Av3uEd/gcc-9-9.4.0/debian/tmp-nvptx/usr,hsa --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 9.4.0 (Ubuntu 9.4.0-1ubuntu1~20.04.1) 
+rm: cannot remove './clean': No such file or directory
+rm: cannot remove './clean.err': No such file or directory
+rm: cannot remove './clean.out': No such file or directory
+rm: cannot remove './clean.sh': No such file or directory
+rm: cannot remove './diags0': No such file or directory
+rm: cannot remove './diff_results.sh': No such file or directory
+rm: cannot remove './gnu_parallel': No such file or directory
+rm: cannot remove './ifort_parallel': No such file or directory
+rm: cannot remove './ifort_serial': No such file or directory
+rm: cannot remove './make_no_run.sh': No such file or directory
+rm: cannot remove './make.sh': No such file or directory
+rm: cannot remove './module_load.sh': No such file or directory
+rm: cannot remove './q-cpu': No such file or directory
+rm: cannot remove './q-run1_wrapper.sh': No such file or directory
+rm: cannot remove './run1.err': No such file or directory
+rm: cannot remove './run1.out': No such file or directory
+rm: cannot remove './run1.sh': No such file or directory
+rm: cannot remove './run1_wrapper.sh': No such file or directory
+rm: cannot remove './run_eclipse_debug.sh': No such file or directory
+rm: cannot remove './run_eclipse.sh': No such file or directory
+rm: cannot remove './run.py': No such file or directory
+rm: cannot remove './run.sh': No such file or directory
+rm: cannot remove './run_slurm.sh': No such file or directory
+rm: cannot remove './scr_clean.sh': No such file or directory
+rm: cannot remove './scr_clear_index.sh': No such file or directory
+rm: cannot remove './script.sh': No such file or directory
+rm: cannot remove './slurm_run.py': No such file or directory
+rm: cannot remove './submit1.sh': No such file or directory
+rm: cannot remove './validate_result.ipynb': No such file or directory
+rm: cannot remove './vtune_collect.sh': No such file or directory
+rm: cannot remove './vtune_data': No such file or directory
+CMake Warning at CMakeLists.txt:277 (message):
+  FORD not found! Please set the CMake cache variable FORD to point to the
+  installed FORD executable, and reconfigure or disable building the
+  documentation.  FORD can be installed from PYPI with `pip install ford` or
+  from <https://github.com/Fortran-FOSS-Programmers/ford> If you do not wish
+  to install FORD and build the JSON-Fortran documentation, then please set
+  the CMake cache variable SKIP_DOC_GEN to TRUE.
+
+
+/home/u177183/json-fortran/build
+f951: Warning: Nonexistent include directory ‘/include’ [-Wmissing-include-dirs]
+f951: Warning: Nonexistent include directory ‘/include’ [-Wmissing-include-dirs]
+f951: Warning: Nonexistent include directory ‘/include’ [-Wmissing-include-dirs]
+mv: cannot stat 'q-run1_wrapper.sh.e*': No such file or directory
+mv: cannot stat 'q-run1_wrapper.sh.o*': No such file or directory
