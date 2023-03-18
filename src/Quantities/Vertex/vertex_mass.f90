@@ -127,6 +127,7 @@ contains
 
 
    subroutine Calculate_vertex_mass_3d(this, coordinates, tot_density, c_mass)
+      use omp_lib
       use geometry_module, only : Tetrahederon_volume
       implicit none
       class(vertex_mass_t), intent(in out) :: this
@@ -162,6 +163,8 @@ contains
       logical :: wall_x_top, wall_x_bot, wall_y_top, wall_y_bot, wall_z_top, wall_z_bot
       integer :: nxp,nyp,nzp
 
+      integer :: num_omp_threads = 12
+
       nxp = this%d1
       nyp = this%d2
       nzp = this%d3
@@ -183,50 +186,50 @@ contains
       call tot_density%Point_to_data(density)
       call coordinates%Point_to_data(x, y, z)
 
-         vertex_mass(1:nxp, 1:nyp , 1:nzp) = 0d0
-         do k = 1, nzp
-            do j = 1, nyp
-               do i = 1, nxp
-                  do t = 1, 8
-                     kk = k - (8 - t) / 4
-                     jj = j - mod(t + 1, 4) / 2
-                     ii = i - mod(t, 2)
-                     if (cell_mass(ii, jj, kk) /= 0d0) then
-                        i1 = i + i_tetr(t, 1)
-                        i2 = i + i_tetr(t, 2)
-                        i3 = i + i_tetr(t, 3)
-                        j1 = j + j_tetr(t, 1)
-                        j2 = j + j_tetr(t, 2)
-                        j3 = j + j_tetr(t, 3)
-                        k1 = k + k_tetr(t, 1)
-                        k2 = k + k_tetr(t, 2)
-                        k3 = k + k_tetr(t, 3)
+      vertex_mass(1:nxp, 1:nyp , 1:nzp) = 0d0
 
-                        if ( .false. .eqv. ( (i_virt(ii) == 0        .and. wall_x_bot .eqv. .true.) .or. &
-                             (i_virt(ii) == virt_nxp .and. wall_x_top .eqv. .true.) .or. &
-                             (j_virt(jj) == 0        .and. wall_y_bot .eqv. .true.) .or. &
-                             (j_virt(jj) == virt_nyp .and. wall_y_top .eqv. .true.) .or. &
-                             (k_virt(kk) == 0        .and. wall_z_bot .eqv. .true.) .or. &
-                             (k_virt(kk) == virt_nzp .and. wall_z_top .eqv. .true.) )       ) then
-                        	vertex_mass(i, j, k) = vertex_mass(i, j, k) + density(ii, jj, kk) * &
-                            	                   Tetrahederon_volume(x(i  , j  , k  ), y(i  , j  , k  ), z(i  , j  , k  ), &
-                            	                                       x(i1, j1, k1), y(i1, j1, k1), z(i1, j1, k1), &
-                            	                                       x(i2, j2, k2), y(i2, j2, k2), z(i2, j2, k2), &
-                            	                                       x(i3, j3, k3), y(i3, j3, k3), z(i3, j3, k3))
-						     else 
-								cycle
-                             end if
+      call omp_set_num_threads(num_omp_threads)
+
+      !$omp parallel do collapse(3) private(k,j,i,t,kk,jj,ii,i1,i2,i3,j1,j2,j3,k1,k2,k3)
+      do k = 1, nzp
+         do j = 1, nyp
+            do i = 1, nxp
+               do t = 1, 8
+                  kk = k - (8 - t) / 4
+                  jj = j - mod(t + 1, 4) / 2
+                  ii = i - mod(t, 2)
+                  if (cell_mass(ii, jj, kk) /= 0d0) then
+                     i1 = i + i_tetr(t, 1)
+                     i2 = i + i_tetr(t, 2)
+                     i3 = i + i_tetr(t, 3)
+                     j1 = j + j_tetr(t, 1)
+                     j2 = j + j_tetr(t, 2)
+                     j3 = j + j_tetr(t, 3)
+                     k1 = k + k_tetr(t, 1)
+                     k2 = k + k_tetr(t, 2)
+                     k3 = k + k_tetr(t, 3)
+                     if (.false. .eqv. ((i_virt(ii) == 0 .and. wall_x_bot .eqv. .true.) .or. &
+                        (i_virt(ii) == virt_nxp .and. wall_x_top .eqv. .true.) .or. &
+                        (j_virt(jj) == 0        .and. wall_y_bot .eqv. .true.) .or. &
+                        (j_virt(jj) == virt_nyp .and. wall_y_top .eqv. .true.) .or. &
+                        (k_virt(kk) == 0        .and. wall_z_bot .eqv. .true.) .or. &
+                        (k_virt(kk) == virt_nzp .and. wall_z_top .eqv. .true.))) then
+                            vertex_mass(i, j, k) = vertex_mass(i, j, k) + &
+                                                   density(ii, jj, kk) * &
+                                                   Tetrahederon_volume(x(i,  j,  k),  y(i,  j,  k),  z(i,  j,  k),  &
+                                                                       x(i1, j1, k1), y(i1, j1, k1), z(i1, j1, k1), &
+                                                                       x(i2, j2, k2), y(i2, j2, k2), z(i2, j2, k2), &
+                                                                       x(i3, j3, k3), y(i3, j3, k3), z(i3, j3, k3))
+                     else
+                        cycle
                      end if
-                  end do
-                  vertex_mass(i, j, k) = vertex_mass(i, j, k) / 8d0
+                  end if
                end do
+               vertex_mass(i, j, k) = vertex_mass(i, j, k) / 8d0
             end do
          end do
-
-
-
-
-
+      end do
+      !$omp end parallel do
 
 cyc = cyc + 1
    end subroutine Calculate_vertex_mass_3d

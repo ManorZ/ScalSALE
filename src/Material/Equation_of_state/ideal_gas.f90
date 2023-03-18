@@ -26,6 +26,7 @@ contains
    subroutine Calculate_ideal_gas (this, pressure, sound_vel, density, sie,&
                                    dp_de, dp_drho, dt_de, dt_drho, gamma_gas, atomic_mass, temperature, mat_num, nrg_or_tmp,&
                                    nx, ny, nz, vof, emf)
+      use omp_lib
       implicit none
       class (ideal_gas_t)                , intent (inout) :: this        
       real(8), dimension (:,:,:,:), pointer, intent (inout) :: pressure
@@ -51,8 +52,15 @@ contains
       real(8) :: gamma1 
       real(8) :: atomic_weight 
       integer :: i, j, k
+
+      integer :: num_omp_threads = 12
+
       gamma1 = gamma_gas - 1d0
       atomic_weight = atomic_mass / AVOGADRO
+
+      call omp_set_num_threads(num_omp_threads)
+
+      !$omp parallel do collapse(3) private(k,j,i)
       do k = 1, nz
          do j = 1, ny
             do i = 1, nx
@@ -77,6 +85,7 @@ contains
             end do
          end do
       end do
+      !$omp end parallel do
 
       end subroutine Calculate_ideal_gas
 

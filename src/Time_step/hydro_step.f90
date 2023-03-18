@@ -792,6 +792,7 @@ contains
     !end subroutine Calculate_acceleration_1d
         
     subroutine Calculate_acceleration_3d(this, dt_mid)
+        use omp_lib
         class (hydro_step_t), intent(in out) :: this
         real(8), intent(in) :: dt_mid         
 
@@ -811,13 +812,8 @@ contains
         real(8) :: y1, y2, y3, y4, y5, y6  
         real(8) :: z1, z2, z3, z4, z5, z6
         real(8) :: ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8
-
-
-        !integer :: num_omp_threads = 6
+        
         integer :: num_omp_threads = 12
-        !integer :: num_omp_threads = 24
-
-
 
         call this%acceleration%Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%mesh        %Point_to_data(x, y, z)
@@ -826,9 +822,16 @@ contains
         call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
 
         call omp_set_num_threads(num_omp_threads)
-
+        
         !!$omp parallel do simd collapse(3) schedule(simd:static) private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
+        
         !$omp parallel do      collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
+        
+        !!$omp parallel private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
+        !!$omp single
+        !write(*,*) "hydro_step:Calculate_acceleration_3d:835: OMP #threads: ", omp_get_num_threads()
+        !!$omp end single
+        !!$omp do collapse(3)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -934,6 +937,8 @@ contains
                 end do
             end do
         end do
+        !!$omp end do
+        !!$omp end parallel
         !$omp end parallel do
         !!$omp end parallel do simd
 
@@ -1125,6 +1130,7 @@ contains
 
 
     subroutine Calculate_artificial_viscosity_3d(this, time)
+        use omp_lib
         use geometry_module,  only : Line_length_in_cell
         use constants_module, only : THIRD
         use general_utils_module, only : Deter
@@ -1182,6 +1188,10 @@ contains
         integer :: i, j, k  
         integer :: ip, jp, kp
         integer :: mesh_type
+        integer :: nx, ny, nz
+        real(8) :: emf
+        
+        integer :: num_omp_threads = 12
 
         call this%a_visc%Update_visc_factors()
         linear_visc_fac => this%a_visc%xl_visc_mat
@@ -1219,96 +1229,132 @@ contains
         time%dt_cour = 1d20
         call this%acceleration%Exchange_end()
 
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    if (vof(i, j, k) < this%emf .or. pressure(i, j, k) == 0d0) then  
+        call omp_set_num_threads(num_omp_threads)
+
+        nx = this%nx
+        ny = this%ny
+        nz = this%nz
+        emf = this%emf
+
+        !$omp parallel do collapse(3) &
+        !$omp private(k,j,i,ip,jp,kp, &
+        !$omp         avg_acc_x,avg_acc_y,avg_acc_z,tot_acc, &
+        !$omp         r1,r2,r3,r4,r5,r6,r7,r8, &
+        !$omp         eff_length, &
+        !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
+        !$omp         x_avg, &
+        !$omp         y1,y2,y3,y4,y5,y6,y7,y8, &
+        !$omp         y_avg, &
+        !$omp         z1,z2,z3,z4,z5,z6,z7,z8, &
+        !$omp         z_avg, &
+        !$omp         eff_vel_div, quad_visc_fac, quad_visc_fac_temp,linear_visc_fac_temp) &
+        !$omp shared(nx,ny,nz,vof,emf,pressure,a_visc,acceleration_x,acceleration_y,acceleration_z,mesh_type,i_sphere,x,y,z,dvel_x_dx,dvel_x_dy,dvel_x_dz,dvel_y_dx,dvel_y_dy,dvel_y_dz,dvel_z_dx,dvel_z_dy,dvel_z_dz,density,sound_vel,dt_cour_temp)
+        do k = 1, nz
+            do j = 1, ny
+                do i = 1, nx
+                    if (vof(i, j, k) < emf .or. pressure(i, j, k) == 0d0) then  
                         a_visc(i, j, k) = 0d0
                     else
                         ip = i + 1
                         jp = j + 1
                         kp = k + 1
 
-                        avg_acc_x = (acceleration_x(i , j , k ) + acceleration_x(ip , j , k  ) + acceleration_x(i , j+1, k  ) &
-                            +acceleration_x(ip, jp, k ) + acceleration_x(i  , j , kp)  + acceleration_x(ip, j  , k+1) &
-                            +acceleration_x(i , jp, kp) + acceleration_x(ip , jp, kp)) * 0.125d0
+                        avg_acc_x = (acceleration_x(i,  j,  k) + &
+                                     acceleration_x(ip, j,  k) + &
+                                     acceleration_x(i , jp, k) + &
+                                     acceleration_x(ip, jp, k) + &
+                                     acceleration_x(i,  j,  kp)+ &
+                                     acceleration_x(ip, j,  kp)+ &
+                                     acceleration_x(i , jp, kp)+ &
+                                     acceleration_x(ip, jp, kp)) * 0.125d0
 
-                        avg_acc_y = (acceleration_y(i , j , k ) + acceleration_y(ip, j , k )  + acceleration_y(i , jp,k ) &
-                            +acceleration_y(ip, jp, k ) + acceleration_y(i , j , kp)  + acceleration_y(ip, j ,kp) &
-                            +acceleration_y(i , jp, kp) + acceleration_y(ip, jp, kp)) * 0.125d0
+                        avg_acc_y = (acceleration_y(i,  j,  k) + &
+                                     acceleration_y(ip, j,  k) + &
+                                     acceleration_y(i,  jp, k) + &
+                                     acceleration_y(ip, jp, k) + &
+                                     acceleration_y(i,  j,  kp)+ &
+                                     acceleration_y(ip, j,  kp)+ &
+                                     acceleration_y(i,  jp, kp)+ &
+                                     acceleration_y(ip, jp, kp)) * 0.125d0
 
-                        avg_acc_z = (acceleration_z(i , j , k ) + acceleration_z(ip, j , k  )  + acceleration_z(i , jp, k  ) &
-                            +acceleration_z(ip, jp, k ) + acceleration_z(i , j , kp )  + acceleration_z(ip, j , kp ) &
-                            +acceleration_z(i , jp, kp) + acceleration_z(ip, jp, kp )) * 0.125d0
+                        avg_acc_z = (acceleration_z(i,  j,  k) + &
+                                     acceleration_z(ip, j,  k) + &
+                                     acceleration_z(i,  jp, k) + &
+                                     acceleration_z(ip, jp, k) + &
+                                     acceleration_z(i,  j,  kp)+ &
+                                     acceleration_z(ip, j , kp)+ &
+                                     acceleration_z(i,  jp, kp)+ &
+                                     acceleration_z(ip, jp, kp)) * 0.125d0
 
                         tot_acc = sqrt(avg_acc_x * avg_acc_x + avg_acc_y * avg_acc_y + avg_acc_z * avg_acc_z)
 
 
-                        if (tot_acc < 1d-8 .or. (mesh_type /= 2 .and. k < i_sphere) ) then 
-
-
-                            r1 = sqrt(x(i  , j  , kp) ** 2d0 + y(i  , j  , kp) ** 2d0 + z(i  , j  , kp) ** 2d0)
-                            r2 = sqrt(x(ip, j  , kp) ** 2d0 + y(ip, j  , kp) ** 2d0 + z(ip, j  , kp) ** 2d0)
-                            r3 = sqrt(x(i  , jp, kp) ** 2d0 + y(i  , jp, kp) ** 2d0 + z(i  , jp, kp) ** 2d0)
+                        if (tot_acc < 1d-8 .or. (mesh_type /= 2 .and. k < i_sphere) ) then
+                            r1 = sqrt(x(i,  j,  kp) ** 2d0 + y(i,  j,  kp) ** 2d0 + z(i,  j,  kp) ** 2d0)
+                            r2 = sqrt(x(ip, j,  kp) ** 2d0 + y(ip, j,  kp) ** 2d0 + z(ip, j,  kp) ** 2d0)
+                            r3 = sqrt(x(i,  jp, kp) ** 2d0 + y(i,  jp, kp) ** 2d0 + z(i,  jp, kp) ** 2d0)
                             r4 = sqrt(x(ip, jp, kp) ** 2d0 + y(ip, jp, kp) ** 2d0 + z(ip, jp, kp) ** 2d0)
-                            r5 = sqrt(x(i  , j  , k  ) ** 2d0 + y(i  , j  , k  ) ** 2d0 + z(i  , j  , k  ) ** 2d0)
-                            r6 = sqrt(x(ip, j  , k  ) ** 2d0 + y(ip, j  , k  ) ** 2d0 + z(ip, j  , k  ) ** 2d0)
-                            r7 = sqrt(x(i  , jp, k  ) ** 2d0 + y(i  , jp, k  ) ** 2d0 + z(i  , jp, k  ) ** 2d0)
-                            r8 = sqrt(x(ip, jp, k  ) ** 2d0 + y(ip, jp, k  ) ** 2d0 + z(ip, jp, k  ) ** 2d0)
+                            r5 = sqrt(x(i,  j,  k)  ** 2d0 + y(i,  j,  k)  ** 2d0 + z(i,  j,  k)  ** 2d0)
+                            r6 = sqrt(x(ip, j,  k)  ** 2d0 + y(ip, j,  k)  ** 2d0 + z(ip, j,  k)  ** 2d0)
+                            r7 = sqrt(x(i,  jp, k)  ** 2d0 + y(i,  jp, k)  ** 2d0 + z(i,  jp, k)  ** 2d0)
+                            r8 = sqrt(x(ip, jp, k)  ** 2d0 + y(ip, jp, k)  ** 2d0 + z(ip, jp, k)  ** 2d0)
                             eff_length = (r1 + r2 + r3 + r4 - r5 - r6 - r7 - r8) / 4d0
                         else
-                            x1 = x(i, j, k)
-                            x2 = x(ip, j, k)
+                            x1 = x(i,  j,  k)
+                            x2 = x(ip, j,  k)
                             x3 = x(ip, jp, k)
-                            x4 = x(i, jp, k)
-                            x5 = x(i, j, kp)
-                            x6 = x(ip, j, kp)
+                            x4 = x(i,  jp, k)
+                            x5 = x(i,  j,  kp)
+                            x6 = x(ip, j,  kp)
                             x7 = x(ip, jp, kp)
-                            x8 = x(i, jp, kp)
+                            x8 = x(i,  jp, kp)
 
-                            y1 = y(i, j, k)
-                            y2 = y(ip, j, k)
+                            y1 = y(i,  j,  k)
+                            y2 = y(ip, j,  k)
                             y3 = y(ip, jp, k)
-                            y4 = y(i, jp, k)
-                            y5 = y(i, j, kp)
-                            y6 = y(ip, j, kp)
+                            y4 = y(i,  jp, k)
+                            y5 = y(i,  j,  kp)
+                            y6 = y(ip, j,  kp)
                             y7 = y(ip, jp, kp)
-                            y8 = y(i, jp, kp)
+                            y8 = y(i,  jp, kp)
 
-                            z1 = z(i, j, k)
-                            z2 = z(ip, j, k)
+                            z1 = z(i,  j,  k)
+                            z2 = z(ip, j,  k)
                             z3 = z(ip, jp, k)
-                            z4 = z(i, jp, k)
-                            z5 = z(i, j, kp)
-                            z6 = z(ip, j, kp)
+                            z4 = z(i,  jp, k)
+                            z5 = z(i,  j,  kp)
+                            z6 = z(ip, j,  kp)
                             z7 = z(ip, jp, kp)
-                            z8 = z(i, jp, kp)
+                            z8 = z(i,  jp, kp)
 
                             x_avg = (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8) * 0.125d0
                             y_avg = (y1 + y2 + y3 + y4 + y5 + y6 + y7 + y8) * 0.125d0
                             z_avg = (z1 + z2 + z3 + z4 + z5 + z6 + z7 + z8) * 0.125d0
 
-                            eff_length = Line_length_in_cell(x1, y1, z1 ,x2, y2, z2 ,x3, y3, z3 ,x4, y4, z4 , &
-                                x5, y5, z5 ,x6, y6, z6 ,x7, y7, z7 ,x8, y8, z8 , &
-                                avg_acc_x, avg_acc_y, avg_acc_z, x_avg, y_avg, z_avg)
+                            eff_length = Line_length_in_cell(x1, y1, z1, &
+                                                             x2, y2, z2, &
+                                                             x3, y3, z3, &
+                                                             x4, y4, z4, &
+                                                             x5, y5, z5, &
+                                                             x6, y6, z6, &
+                                                             x7, y7, z7, &
+                                                             x8, y8, z8, &
+                                                             avg_acc_x, avg_acc_y, avg_acc_z, &
+                                                             x_avg, y_avg, z_avg)
 
                         end if
                         if (tot_acc < 1d-8) then
                             eff_vel_div = 0d0
                         else
                             eff_vel_div = (dvel_x_dx(i, j, k) * avg_acc_x ** 2 + &
-                                dvel_y_dy(i, j, k) * avg_acc_y ** 2 + &
-                                dvel_z_dz(i, j, k) * avg_acc_z ** 2 + &
-                                (dvel_x_dy(i, j, k) + dvel_y_dx(i, j, k)) * avg_acc_x * avg_acc_y + &
-                                (dvel_x_dz(i, j, k) + dvel_z_dx(i, j, k)) * avg_acc_x * avg_acc_z + &
-                                (dvel_y_dz(i, j, k) + dvel_z_dy(i, j, k)) * avg_acc_y * avg_acc_z) / &
-                                (avg_acc_x ** 2 + avg_acc_y ** 2 + avg_acc_z ** 2 + 1d-20)
+                                           dvel_y_dy(i, j, k) * avg_acc_y ** 2 + &
+                                           dvel_z_dz(i, j, k) * avg_acc_z ** 2 + &
+                                          (dvel_x_dy(i, j, k) + dvel_y_dx(i, j, k)) * avg_acc_x * avg_acc_y + &
+                                          (dvel_x_dz(i, j, k) + dvel_z_dx(i, j, k)) * avg_acc_x * avg_acc_z + &
+                                          (dvel_y_dz(i, j, k) + dvel_z_dy(i, j, k)) * avg_acc_y * avg_acc_z) / &
+                                          (avg_acc_x ** 2 + avg_acc_y ** 2 + avg_acc_z ** 2 + 1d-20)
                         end if
-
-
-
-
-
+                        
                         quad_visc_fac_temp   = quad_visc_fac
                         linear_visc_fac_temp = linear_visc_fac(i,j,k)
 
@@ -1322,22 +1368,19 @@ contains
                         a_visc(i, j, k) = min(0d0, eff_vel_div) * a_visc(i, j, k)
                         dt_cour_temp = eff_length * eff_length / sound_vel(i ,j, k)
 
-                        if (dt_cour_temp < time%dt_cour) then
-                            time%dt_cour = dt_cour_temp
-                            time%i_cour = i
-                            time%j_cour = j
-                            time%k_cour = k
-                        end if
+                        !if (dt_cour_temp < time%dt_cour) then
+                            !time%dt_cour = dt_cour_temp
+                            !time%i_cour = i
+                            !time%j_cour = j
+                            !time%k_cour = k
+                        !end if
                     end if
                 end do
             end do
         end do
-
+        !$omp end parallel do
         call this%a_visc%Exchange_virtual_space_nonblocking()
         time%dt_cour = sqrt(time%dt_cour) / time%dt_cour_fac
-
-
-
     end subroutine Calculate_artificial_viscosity_3d
 
 
@@ -1441,6 +1484,7 @@ contains
 
 
     subroutine Calculate_velocity_3d(this, dt_mid)
+        use omp_lib
         class (hydro_step_t), intent(in out) :: this
         real(8)             , intent(in) :: dt_mid
         real(8), dimension(:, :, :), pointer :: inversed_vertex_mass 
@@ -1462,10 +1506,8 @@ contains
         real(8) :: r1, r2, r3, r4, r5, r6, r7, r8
         real(8) :: av1, av2, av3, av4, av5, av6, av7, av8
         
-        !integer :: num_omp_threads = 6
         integer :: num_omp_threads = 12
-        !integer :: num_omp_threads = 24
-
+        
         call this%acceleration   %Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%velocity       %Point_to_data(velocity_x, velocity_y, velocity_z)
         call this%mesh           %Point_to_data(x, y, z)
@@ -1475,9 +1517,18 @@ contains
         call this%a_visc         %Point_to_data(a_visc)
 
         call this%a_visc%Exchange_end()
+        
         call omp_set_num_threads(num_omp_threads)
+        
         !!$omp parallel do simd collapse(3) schedule(simd:static) private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
+        
         !$omp parallel do      collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
+        
+        !!$omp parallel private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
+        !!$omp single
+        !write(*,*) "hydro_step:Calculate_velocity_3d:1487: OMP #threads: ", omp_get_num_threads()
+        !!$omp end single
+        !!$omp do collapse(3)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -1518,16 +1569,6 @@ contains
                     av7 = a_visc(im, jm, k)
                     av8 = a_visc(im, jm, km)
 
-                    !velocity_x(i, j, k) = velocity_x(i, j, k) + acceleration_x(i, j, k) + &
-                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                    !    (-a_visc(i , j , k ) * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3-y1)) &
-                    !    -a_visc(i , j , km) * ((y6 - y1) * (z2 - z1) - (z6 - z1) * (y2-y1)) &
-                    !    -a_visc(im, j , k ) * ((y3 - y4) * (z2 - z4) - (z3 - z4) * (y2-y4)) &
-                    !    -a_visc(im, j , km) * ((y2 - y4) * (z6 - z4) - (z2 - z4) * (y6-y4)) &
-                    !    -a_visc(i , jm, k ) * ((y1 - y5) * (z3 - z5) - (z1 - z5) * (y3-y5)) &
-                    !    -a_visc(i , jm, km) * ((y6 - y5) * (z1 - z5) - (z6 - z5) * (y1-y5)) &
-                    !    -a_visc(im, jm, k ) * ((y5 - y4) * (z3 - z4) - (z5 - z4) * (y3-y4)) &
-                    !    -a_visc(im, jm, km) * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5-y4)))
                     velocity_x(i, j, k) = velocity_x(i, j, k) + acceleration_x(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
                        (-av1 * ((y2 - y1) * (z3 - z1) - (z2 - z1) * (y3-y1)) &
@@ -1540,18 +1581,6 @@ contains
                         -av8 * ((y6 - y4) * (z5 - z4) - (z6 - z4) * (y5-y4)))
                     !call Calculate_velocity_1d(velocity_x(i, j, k), acceleration_x(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, y1, y2, y3, y4, y5, y6, z1, z2, z3, z4, z5, z6)
 
-
-
-                    !velocity_y(i, j, k) = velocity_y(i, j, k) + acceleration_y(i, j, k) + &
-                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                    !    (-a_visc(i , j , k ) * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
-                    !    -a_visc(i , j , km) * ((z6 - z1) * (x2 - x1) - (x6 - x1) * (z2 - z1)) &
-                    !    -a_visc(im, j , k ) * ((z3 - z4) * (x2 - x4) - (x3 - x4) * (z2 - z4)) &
-                    !    -a_visc(im, j , km) * ((z2 - z4) * (x6 - x4) - (x2 - x4) * (z6 - z4)) &
-                    !    -a_visc(i , jm, k ) * ((z1 - z5) * (x3 - x5) - (x1 - x5) * (z3 - z5)) &
-                    !    -a_visc(i , jm, km) * ((z6 - z5) * (x1 - x5) - (x6 - x5) * (z1 - z5)) &
-                    !    -a_visc(im, jm, k ) * ((z5 - z4) * (x3 - x4) - (x5 - x4) * (z3 - z4)) &
-                    !    -a_visc(im, jm, km) * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
                     velocity_y(i, j, k) = velocity_y(i, j, k) + acceleration_y(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
                        (-av1 * ((z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1)) &
@@ -1564,16 +1593,6 @@ contains
                         -av8 * ((z6 - z4) * (x5 - x4) - (x6 - x4) * (z5 - z4)))
                     !call Calculate_velocity_1d(velocity_y(i, j, k), acceleration_y(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, z1, z2, z3, z4, z5, z6, x1, x2, x3, x4, x5, x6)
 
-                    !velocity_z(i, j, k) = velocity_z(i, j, k) + (acceleration_z(i, j, k) + &
-                    !    dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
-                    !    (-a_visc(i , j , k ) * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
-                    !    -a_visc(i , j , km) * ((x6 - x1) * (y2 - y1) - (y6 - y1) * (x2 - x1)) &
-                    !    -a_visc(im, j , k ) * ((x3 - x4) * (y2 - y4) - (y3 - y4) * (x2 - x4)) &
-                    !    -a_visc(im, j , km) * ((x2 - x4) * (y6 - y4) - (y2 - y4) * (x6 - x4)) &
-                    !    -a_visc(i , jm, k ) * ((x1 - x5) * (y3 - y5) - (y1 - y5) * (x3 - x5)) &
-                    !    -a_visc(i , jm, km) * ((x6 - x5) * (y1 - y5) - (y6 - y5) * (x1 - x5)) &
-                    !    -a_visc(im, jm, k ) * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
-                    !    -a_visc(im, jm, km) * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4))))
                     velocity_z(i, j, k) = velocity_z(i, j, k) + (acceleration_z(i, j, k) + &
                         dt_mid * 0.25d0 * inversed_vertex_mass(i, j, k) * &
                        (-av1 * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1)) &
@@ -1585,13 +1604,11 @@ contains
                         -av7 * ((x5 - x4) * (y3 - y4) - (y5 - y4) * (x3 - x4)) &
                         -av8 * ((x6 - x4) * (y5 - y4) - (y6 - y4) * (x5 - x4))))
                     !call Calculate_velocity_1d(velocity_z(i, j, k), acceleration_z(i, j, k), inversed_vertex_mass(i, j, k), dt_mid, av1, av2, av3, av4, av5, av6, av7, av8, x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6)
-
-
-
-
                 end do
             end do
         end do
+        !!$omp end do
+        !!$omp end parallel
         !$omp end parallel do
         !!$omp end parallel do simd
 

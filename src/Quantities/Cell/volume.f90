@@ -48,6 +48,7 @@ contains
    end function
 
    subroutine Calculate(this, coordinates, sw_vertex_mass_optional, cyl_optional)
+      use omp_lib
       use quantity_module, only: quantity_t
       use geometry_module, only: x_proj, Polygon_volume
       use general_utils_module, only : Get_axises_num
@@ -76,7 +77,7 @@ contains
       integer :: sw_vertex_mass
       integer                                         :: dimension
 
-
+      integer :: num_omp_threads = 12
 
       if (.not. present(cyl_optional)) then
          cyl = 0d0
@@ -111,11 +112,20 @@ contains
                      call Polygon_volume(4, x_vert, y_vert, vol(i, j, 1), cyl)
                   end do
                end do
-   else
-      call coordinates%Point_to_data(x, y, z)
+      else
+         call coordinates%Point_to_data(x, y, z)
 
-     is_neg = 0
-     nz = this%d3
+         call omp_set_num_threads(num_omp_threads)
+
+         is_neg = 0
+         nz = this%d3
+         !$omp parallel do collapse(3) &
+         !$omp private(k,j,i, &
+         !$omp         ip,jp,kp, &
+         !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
+         !$omp         y1,y2,y3,y4,y5,y6,y7,y8, &
+         !$omp         z1,z2,z3,z4,z5,z6,z7,z8) &
+         !$omp shared(nz,ny,nx,x,y,z,vol)
          do k = 1, nz
             do j = 1, ny
                do i = 1, nx
@@ -130,7 +140,7 @@ contains
                   x6 = x(ip, j , kp )
                   x7 = x(ip, jp, kp )
                   x8 = x(i , jp, kp )
-
+    
                   y1 = y(i , j , k )
                   y2 = y(ip, j , k )
                   y3 = y(ip, jp, k )
@@ -139,7 +149,7 @@ contains
                   y6 = y(ip, j , kp)
                   y7 = y(ip, jp, kp)
                   y8 = y(i , jp, kp)
-
+    
                   z1 = z(i , j , k  )
                   z2 = z(ip, j , k  )
                   z3 = z(ip, jp, k  )
@@ -148,7 +158,7 @@ contains
                   z6 = z(ip, j , kp)
                   z7 = z(ip, jp, kp)
                   z8 = z(i , jp, kp)
-
+    
                   vol(i, j, k) = (-x_proj(y2, z2, y3, z3, y4, z4, y5, z5, y6, z6, y8, z8) * x1 &
                                   -x_proj(y3, z3, y4, z4, y1, z1, y6, z6, y7, z7, y5, z5) * x2 &
                                   -x_proj(y4, z4, y1, z1, y2, z2, y7, z7, y8, z8, y6, z6) * x3 &
@@ -157,18 +167,10 @@ contains
                                   +x_proj(y7, z7, y8, z8, y5, z5, y2, z2, y3, z3, y1, z1) * x6 &
                                   +x_proj(y8, z8, y5, z5, y6, z6, y3, z3, y4, z4, y2, z2) * x7 &
                                   +x_proj(y5, z5, y6, z6, y7, z7, y4, z4, y1, z1, y3, z3) * x8 ) / 12d0
-
-
-
                end do
             end do
          end do
-
-
-
-
-
-
+         !$omp end parallel do
       end if
    end subroutine Calculate
 
