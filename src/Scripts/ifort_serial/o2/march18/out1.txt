@@ -1,0 +1,17 @@
+ 0
+  making sedov-taylor
+ done mesh
+ Done diagnostics
+ finished building problem
+ Cycle time:    5.19703602790833     
+ Cycle time:    5.03551292419434     
+ Cycle time:    5.02803516387939     
+ Cycle time:    5.03098893165588     
+ Cycle time:    5.02434706687927     
+ Cycle time:    5.03154397010803     
+ Cycle time:    5.03102493286133     
+ Cycle time:    5.03788709640503     
+ Cycle time:    5.04184794425964     
+ Cycle time:    5.03749918937683     
+ Total Time:   50.5284779071808     
+ ncyc:           10
