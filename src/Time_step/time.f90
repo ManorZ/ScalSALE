@@ -322,8 +322,7 @@ contains
 
       call omp_set_num_threads(num_omp_threads)
 
-      !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i,vel_diff_coor_diff_i,vel_diff_coor_diff_j,vel_diff_coor_diff_k,vel_grad)
-      !$omp parallel do      collapse(3)                       private(k,j,i,vel_diff_coor_diff_i,vel_diff_coor_diff_j,vel_diff_coor_diff_k,vel_grad)
+      !$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i,vel_diff_coor_diff_i,vel_diff_coor_diff_j,vel_diff_coor_diff_k,vel_grad)
       do k = 1, nz
          do j = 1, ny
             do i = 1, nx
@@ -362,8 +361,7 @@ contains
             end do
          end do
       end do
-      !$omp end parallel do
-      !!$omp end parallel do simd
+      !$omp end parallel do simd
 
       if (vel_grad_max /= 0) this%dt_grad = this%dt_factor / vel_grad_max 
    end subroutine Calculate_vel_grad_dt_3d

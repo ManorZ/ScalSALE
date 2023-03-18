@@ -1038,7 +1038,7 @@ contains
                                                               u3u2u7, u3u4u7, u4u1u3, u4u3u8, u4u1u8, u5u8u6, u5u6u1, &
                                                               u5u8u1, u6u5u7, u6u7u2, u6u5u2, u7u6u8, u7u8u3, u7u6u3, &
                                                               u8u7u5, u8u5u4, u8u7u4)
-   !!$omp declare simd
+   !$omp declare simd
       implicit none
       real(8), intent(out) :: u1u2u4, u1u4u5, u1u2u5, u2u3u1, u2u1u6, u2u3u6, u3u4u2, &
                               u3u2u7, u3u4u7, u4u1u3, u4u3u8, u4u1u8, u5u8u6, u5u6u1, &
@@ -1089,7 +1089,7 @@ contains
                                                                   a7a6b5b6b7b6a5a6, a2a6b7b6b2b6a7a6, a5a6b2b6b5b6a2a6, &
                                                                   a8a7b6b7b8b7a6a7, a3a7b8b7b3b7a8a7, a6a7b3b7b6b7a3a7, &
                                                                   a5a8b7b8b5b8a7a8, a4a8b5b8b4b8a5a8, a7a8b4b8b7b8a4a8)
-   !!$omp declare simd                                                        
+   !$omp declare simd                                                        
       implicit none
       real(8), intent(out) :: a4a1b2b1b4b1a2a1, a5a1b4b1b5b1a4a1, a2a1b5b1b2b1a5a1, &
                               a1a2b3b2b1b2a3a2, a6a2b1b2b6b2a1a2, a3a2b6b2b3b2a6a2, &

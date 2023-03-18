@@ -119,7 +119,7 @@ contains
 
          is_neg = 0
          nz = this%d3
-         !$omp parallel do collapse(3) &
+         !$omp parallel do simd collapse(1) schedule(simd:static) &
          !$omp private(k,j,i, &
          !$omp         ip,jp,kp, &
          !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
@@ -170,7 +170,7 @@ contains
                end do
             end do
          end do
-         !$omp end parallel do
+         !$omp end parallel do simd
       end if
    end subroutine Calculate
 
