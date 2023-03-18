@@ -234,6 +234,10 @@ contains
       real(8) :: velocity_sq 
       real(8) :: factor      
       integer :: i, j, k
+      integer :: nzpp, nypp, nxpp
+      integer :: nzp, nyp, nxp
+
+      integer :: num_omp_threads = 12
 
       call this%velocity%Point_to_data(velocity_x, velocity_y, velocity_z)
       call this%mesh%Point_to_data(x, y, z)
@@ -242,37 +246,41 @@ contains
       call this%mesh_velocity%Point_to_data(mesh_velocity_x, mesh_velocity_y, mesh_velocity_z)
       call this%vertex_mass%Point_to_data(vertex_mass)
 
+      call omp_set_num_threads(num_omp_threads)
+      
+      nzpp = this%nzp + 1
+      nypp = this%nyp + 1
+      nxpp = this%nxp + 1
 
-
-
-
-
-
-
-      do k = 0, this%nzp + 1
-         do j = 0, this%nyp + 1
-            do i = 0, this%nxp + 1
+      !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+      !$omp parallel do      collapse(3)                       private(k,j,i)
+      do k = 0, nzpp
+         do j = 0, nypp
+            do i = 0, nxpp
                material_x(i, j, k) = x(i, j, k) + velocity_x(i, j, k) * dt
                material_y(i, j, k) = y(i, j, k) + velocity_y(i, j, k) * dt
                material_z(i, j, k) = z(i, j, k) + velocity_z(i, j, k) * dt
             end do
          end do
       end do
+      !$omp end parallel do
+      !!$omp end parallel do simd
 
       call this%material_volume%Calculate(this%material_coordinates)
       call this%material_volume%Exchange_virtual_space_nonblocking()
+      
+      nzp = this%nzp
+      nyp = this%nyp
+      nxp = this%nxp
 
-
-
-
-
-
-      do k = 1, this%nzp
-         do j = 1, this%nyp
-            do i = 1, this%nxp
-               velocity_sq = velocity_z(i, j, k) * velocity_z(i, j, k) &
-                  + velocity_y(i, j, k) * velocity_y(i, j, k) &
-                  + velocity_x(i, j, k) * velocity_x(i, j, k)
+      !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+      !$omp parallel do      collapse(3)                       private(k,j,i)
+      do k = 1, nzp
+         do j = 1, nyp
+            do i = 1, nxp
+               velocity_sq = velocity_z(i, j, k) * velocity_z(i, j, k) + &
+                             velocity_y(i, j, k) * velocity_y(i, j, k) + &
+                             velocity_x(i, j, k) * velocity_x(i, j, k)
 
                if ((vertex_mass(i, j, k) < this%mass_threshold) .and. (velocity_sq > this%velocity_limit)) then
                   factor = sqrt(this%velocity_limit / velocity_sq)
@@ -283,34 +291,39 @@ contains
             end do
          end do
       end do
+      !$omp end parallel do
+      !!$omp end parallel do simd
 
       select case (this%rezone_type)
          case(0)
-
-
-            do k = 1, this%nzp
-               do j = 1, this%nyp
-                  do i = 1, this%nxp
+            !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+            !$omp parallel do      collapse(3)                       private(k,j,i)
+            do k = 1, nzp
+               do j = 1, nyp
+                  do i = 1, nxp
                      mesh_velocity_x(i, j, k) = velocity_x(i, j, k)
                      mesh_velocity_y(i, j, k) = velocity_y(i, j, k)
                      mesh_velocity_z(i, j, k) = velocity_z(i, j, k)
                   end do
                end do
             end do
-
+            !$omp end parallel do
+            !!$omp end parallel do simd
          case(1)
-            do k = 1, this%nzp
-               do j = 1, this%nyp
-                  do i = 1, this%nxp
+            !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+            !$omp parallel do      collapse(3)                       private(k,j,i)
+            do k = 1, nzp
+               do j = 1, nyp
+                  do i = 1, nxp
                      mesh_velocity_x(i, j, k) = 0
                      mesh_velocity_y(i, j, k) = 0
                      mesh_velocity_z(i, j, k) = 0
                   end do
                end do
             end do
-
+            !$omp end parallel do
+            !!$omp end parallel do simd
          case default
-
       end select
 
       call this%mesh_velocity%Apply_boundary(this%mesh%coordinates%data)

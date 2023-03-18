@@ -467,9 +467,9 @@ contains
         real(8),save :: timer1 = 0
         real(8) :: tmp
         integer :: tmp_mat  
-        integer :: i, j, k     
+        integer :: i, j, k, nz, ny, nx, nmats
 
-
+        integer :: num_omp_threads = 12
 
 
 
@@ -516,28 +516,38 @@ contains
 
         call this%Calculate_density(this%total_volume)
 
+        call omp_set_num_threads(num_omp_threads)
+
 
         sound_vel   = 1d-20
         temperature = 0d0
         pressure    = 0d0
         dp_drho     = 0d0
         dp_de       = 0d0
-
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    do tmp_mat = 1, this%nmats
-
-                        if (vof(i, j, k) >= this%emf) then
-                            temperature_vof(tmp_mat, i, j, k) = 0d0
-                            pressure_vof   (tmp_mat, i, j, k) = 0d0
-                            dp_drho_vof    (tmp_mat, i, j, k) = 0d0
-                            dp_de_vof      (tmp_mat, i, j, k) = 0d0
-                        end if
-                    end do
-                end do
-            end do
-        end do
+        
+        nz = this%nz
+        ny = this%ny
+        nx = this%nx
+        nmats = this%nmats
+        
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i,tmp_mat)
+        !!$omp parallel do      collapse(3)                       private(k,j,i,tmp_mat)
+        !do k = 1, nz
+        !    do j = 1, ny
+        !        do i = 1, nx
+        !            do tmp_mat = 1, nmats
+        !                if (vof(i, j, k) >= this%emf) then
+        !                    temperature_vof(tmp_mat, i, j, k) = 0d0
+        !                    pressure_vof   (tmp_mat, i, j, k) = 0d0
+        !                    dp_drho_vof    (tmp_mat, i, j, k) = 0d0
+        !                    dp_de_vof      (tmp_mat, i, j, k) = 0d0
+        !                end if
+        !            end do
+        !        end do
+        !    end do
+        !end do
+        !!$omp end parallel do
+        !!$omp end parallel do simd
 
 
 
@@ -557,14 +567,15 @@ contains
         call this%materials%Apply_eos(this%nx, this%ny, this%nz, this%emf, .true.)
 
 
-
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    do tmp_mat = 1, this%nmats
-                        if (mat_vof(tmp_mat, i, j, k) <= this%emf) cycle
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i,tmp_mat)
+        !$omp parallel do      collapse(3)                       private(k,j,i,tmp_mat)
+        do k = 1, nz
+            do j = 1, ny
+                do i = 1, nx
+                    do tmp_mat = 1, nmats
+                        !if (mat_vof(tmp_mat, i, j, k) <= this%emf) cycle
                         temperature(i, j, k) = temperature(i, j, k) + &
-                            temperature_vof_old(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k) / (dt_de_vof(tmp_mat, i, j, k) + 1d-30)
+                                               temperature_vof_old(tmp_mat, i, j, k) * cell_mass_vof(tmp_mat, i, j, k) / (dt_de_vof(tmp_mat, i, j, k) + 1d-30)
                         sound_vel  (i, j, k) = sound_vel  (i, j, k) + sound_vel_vof(tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
                         pressure   (i, j, k) = pressure   (i, j, k) + pressure_vof (tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
                         dp_drho    (i, j, k) = dp_drho    (i, j, k) + dp_drho_vof  (tmp_mat, i, j, k) * mat_vof(tmp_mat, i, j, k)
@@ -574,24 +585,33 @@ contains
                 end do
             end do
         end do
+        !$omp end parallel do
+        !!$omp end parallel do simd
 
         call this%total_pressure%Exchange_virtual_space_nonblocking()
         call this%total_density%Apply_boundary(.false.)
 
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    if (vof(i, j, k) <= this%emf) cycle
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+        !$omp parallel do      collapse(3)                       private(k,j,i)
+        do k = 1, nz
+            do j = 1, ny
+                do i = 1, nx
+                    !if (vof(i, j, k) <= this%emf) cycle
                     temperature(i, j, k) = temperature(i, j, k) / dt_de_temp(i, j, k)
                     dp_drho    (i, j, k) = dp_drho    (i, j, k) / (vof      (i, j, k) + 1d-30)
                     dp_de      (i, j, k) = cell_mass  (i, j, k) / dp_de     (i, j, k)
                 end do
             end do
         end do
+        !omp end parallel do
+        !!omp end parallel do simd
 
         deallocate(dt_de_temp)
 
         call this%total_pressure%Exchange_end()
+        
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+        !$omp parallel do      collapse(3)                       private(k,j,i)
         do k = 0, this%nzp
             do j = 0, this%nyp
                 do i = 0, this%nxp
@@ -599,6 +619,8 @@ contains
                 end do
             end do
         end do
+        !$omp end parallel do
+        !!$omp end parallel do simd
 
 
 
@@ -655,6 +677,7 @@ contains
 
         integer :: i, j, k     
         integer :: tmp_mat  
+        integer :: nz, ny, nx
 
         call this%total_density  %Point_to_data(density)
         call this%total_cell_mass%Point_to_data(cell_mass)
@@ -663,29 +686,42 @@ contains
         call this%materials%density  %Point_to_data(density_vof)
         call this%materials%vof      %Point_to_data(mat_vof)
         call volume%Point_to_data(vol)
-
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
+        
+        nz = this%nz
+        ny = this%ny
+        nx = this%nx
+        
+        !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+        !$omp parallel do      collapse(3)                       private(k,j,i)
+        do k = 1, nz
+            do j = 1, ny
+                do i = 1, nx
                     density(i, j, k) = cell_mass(i, j, k) / vol(i, j, k)
-                end do
-            end do
-        end do
-
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
                     do tmp_mat = 1, this%nmats
                         density_vof(tmp_mat, i, j, k) = 0d0
                         if (mat_vof(tmp_mat, i, j, k) > this%emf) then
                             density_vof(tmp_mat, i, j, k) = cell_mass_vof(tmp_mat, i, j, k) / (vol(i, j, k) * mat_vof(tmp_mat, i, j, k))
-!write(*,*) "Calculating", tmp_mat,i,j,density_vof(tmp_mat,i,j,k),cell_mass_vof(tmp_mat,i,j,k), mat_vof(tmp_mat,i,j,k)
                         end if
                     end do
                 end do
             end do
         end do
-!        stop
+        !$omp end parallel do
+        !!$omp end parallel do simd
+
+        !do k = 1, this%nz
+        !    do j = 1, this%ny
+        !        do i = 1, this%nx
+        !            do tmp_mat = 1, this%nmats
+        !                density_vof(tmp_mat, i, j, k) = 0d0
+        !                if (mat_vof(tmp_mat, i, j, k) > this%emf) then
+        !                    density_vof(tmp_mat, i, j, k) = cell_mass_vof(tmp_mat, i, j, k) / (vol(i, j, k) * mat_vof(tmp_mat, i, j, k))
+!write(*!,*) "Calculating", tmp_mat,i,j,density_vof(tmp_mat,i,j,k),cell_mass_vof(tmp_mat,i,j,k), mat_vof(tmp_mat,i,j,k)
+        !                end if
+        !            end do
+        !        end do
+        !    end do
+        !end do
     end subroutine Calculate_density
 
     subroutine Calculate_inversed_vertex_mass(this)
@@ -1913,7 +1949,9 @@ contains
         real(8) :: sie_diff                  
         real(8) :: stress_fac                
 
-        integer :: i, j, k, tmp_mat          
+        integer :: i, j, k, tmp_mat, nz, ny, nx, nmats
+
+        integer :: num_omp_threads = 12
 
         call this%velocity         %Point_to_data(velocity_x, velocity_y, velocity_z)
         call this%mesh             %Point_to_data(x, y, z)
@@ -1940,17 +1978,24 @@ contains
         call this%materials%sie        %Point_to_data(sie_vof)
         call this%materials%vof        %Point_to_data(mat_vof)
 
-        do k = 1, this%nz
-            do j = 1, this%ny
-                do i = 1, this%nx
-                    do tmp_mat = 1, this%nmats
-
-                        if (vof(i, j, k) < this%emf) then
-                            sie(i, j, k) = 0d0
-                            temperature(i, j, k) = teps
-                            temperature_vof(tmp_mat, i, j, k) = 0d0
-                            cycle
-                        end if
+        call omp_set_num_threads(num_omp_threads)
+        
+        nz = this%nz
+        ny = this%ny
+        nx = this%nx
+        nmats = this%nmats
+        !$omp parallel do collapse(3) &
+        !$omp private(k,j,i,tmp_mat, &
+        !$omp         vol_diff,vol_diff_stress, &
+        !$omp         a_visc_temp, &
+        !$omp         sie_vof_temp, &
+        !$omp         pressure_temp,dp_de_temp,dp_drho_temp,mass_vof_temp, &
+        !$omp         vol_diff_vof_temp,vol_vof_temp,stress_fac,vol_diff_vof_stress_temp, &
+        !$omp         sie_diff)
+        do k = 1, nz
+            do j = 1, ny
+                do i = 1, nx
+                    do tmp_mat = 1, nmats
 
                         vol_diff = mat_vol(i, j, k) - vol(i, j, k)
                         vol_diff_stress = 0d0
@@ -1982,13 +2027,9 @@ contains
                             vol_diff_vof_temp = vol_diff * mat_vof(tmp_mat, i, j, k)
                             vol_vof_temp  = vol(i, j, k) * mat_vof(tmp_mat, i, j, k)
 
-                            stress_fac = 0d0
-
-                            vol_diff_vof_stress_temp = vol_diff_stress * stress_fac * vof(i, j, k)
-
                             sie_diff = - ((pressure_temp - &
                                 (0.5d0 * dp_drho_temp * mass_vof_temp / vol_vof_temp ** 2 * vol_diff_vof_temp) + a_visc_temp) *&
-                                vol_diff_vof_temp + vol_diff_vof_stress_temp) / &
+                                vol_diff_vof_temp) / &
                                 (1d0 + 0.5d0 * dp_de_temp * vol_diff_vof_temp / (mass_vof_temp + 1d-30)) / (mass_vof_temp+1d-30)
 
                             if (sie_diff == 0d0) cycle
@@ -1999,6 +2040,7 @@ contains
                 end do
             end do
         end do
+        !$omp end parallel do
 
         call this%total_sie%Exchange_virtual_space_nonblocking()
 

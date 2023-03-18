@@ -96,6 +96,7 @@ contains
       real(8)                                     , intent(in)     :: dt
 
       integer :: i,j,k
+      integer :: d3,d2,d1
       real(8), dimension(:, :, :), pointer :: velocity_x      
       real(8), dimension(:, :, :), pointer :: velocity_y      
       real(8), dimension(:, :, :), pointer :: velocity_z      
@@ -108,6 +109,7 @@ contains
 
       integer                                                        :: dimension
 
+      integer :: num_omp_threads = 12
 
       if (this%dimension == 2) then
          call velocity%Point_to_data(velocity_x, velocity_y)
@@ -134,15 +136,26 @@ contains
          else
             call coords%Point_to_data(x_tag, y_tag, z_tag)
          end if
-         do k = 1,this%d3
-            do j = 1, this%d2
-               do i = 1, this%d1
+         
+         d3 = this%d3
+         d3 = this%d2
+         d3 = this%d1
+
+         call omp_set_num_threads(num_omp_threads)
+
+         !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
+         !$omp parallel do      collapse(3)                       private(k,j,i)
+         do k = 1, d3
+            do j = 1, d2
+               do i = 1, d1
                   x(i, j, k) = x_tag(i, j, k) + dt * velocity_x(i, j, k)
                   y(i, j, k) = y_tag(i, j, k) + dt * velocity_y(i, j, k)
                   z(i, j, k) = z_tag(i, j, k) + dt * velocity_z(i, j, k)
                end do
             end do
          end do
+         !$omp end parallel do
+         !!$omp end parallel do simd
       end if
    end subroutine Calculate
 
