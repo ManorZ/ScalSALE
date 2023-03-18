@@ -24,9 +24,8 @@ set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fopenmp -O0 -ffree-line-length-512")
 
 else()
 set(ENV{JSONFORTRAN} "/home/u177183/json-fortran/build")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O0 -g -qopenmp ")
-set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -g -qopenmp ")
-#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O3 -g -qopenmp ")
+set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O0 -g -qopenmp ")
+#set(CMAKE_Fortran_FLAGS "-fPIC -cpp -fpp -O2 -g -qopenmp ")
 endif()
 message(STATUS "CMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}")
 
