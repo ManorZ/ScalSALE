@@ -174,7 +174,7 @@ contains
         integer :: ip,im,jp,jm, km,kp
         integer,save :: cntr = 0
 
-        integer :: num_omp_threads = 12
+        integer :: num_omp_threads = 24
 
         real(8) :: u1u2u4, u1u4u5, u1u2u5, u2u3u1, u2u1u6, u2u3u6, u3u4u2, &
             u3u2u7, u3u4u7, u4u1u3, u4u3u8, u4u1u8, u5u8u6, u5u6u1, &

@@ -110,7 +110,7 @@ contains
 
       integer                                                        :: dimension
 
-      integer :: num_omp_threads = 12
+      integer :: num_omp_threads = 24
 
       if (this%dimension == 2) then
          call velocity%Point_to_data(velocity_x, velocity_y)

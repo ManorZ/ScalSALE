@@ -237,7 +237,7 @@ contains
       integer :: nzpp, nypp, nxpp
       integer :: nzp, nyp, nxp
 
-      integer :: num_omp_threads = 12
+      integer :: num_omp_threads = 24
 
       call this%velocity%Point_to_data(velocity_x, velocity_y, velocity_z)
       call this%mesh%Point_to_data(x, y, z)

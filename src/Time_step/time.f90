@@ -308,7 +308,7 @@ contains
       real(8) :: vel_diff_coor_diff_j  
       real(8) :: vel_diff_coor_diff_k
       
-      integer :: num_omp_threads = 12
+      integer :: num_omp_threads = 24
 
       call mesh%Point_to_data(x, y, z)
       call velocity%Point_to_data(velocity_x, velocity_y, velocity_z)
@@ -509,7 +509,7 @@ contains
       integer :: i, j, k 
       logical :: is_wall_x_top, is_wall_x_bot,is_wall_y_top, is_wall_y_bot,is_wall_z_top,is_wall_z_bot
 
-      integer :: num_omp_threads = 12
+      integer :: num_omp_threads = 24
 
       is_wall_x_top = this%parallel_params%is_wall_x_top
       is_wall_x_bot = this%parallel_params%is_wall_x_bot
