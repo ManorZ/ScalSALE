@@ -163,7 +163,7 @@ contains
       logical :: wall_x_top, wall_x_bot, wall_y_top, wall_y_bot, wall_z_top, wall_z_bot
       integer :: nxp,nyp,nzp
 
-      integer :: num_omp_threads = 6
+      integer :: num_omp_threads = 18
 
       nxp = this%d1
       nyp = this%d2

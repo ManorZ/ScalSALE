@@ -77,7 +77,7 @@ contains
       integer :: sw_vertex_mass
       integer                                         :: dimension
 
-      integer :: num_omp_threads = 6
+      integer :: num_omp_threads = 18
 
       if (.not. present(cyl_optional)) then
          cyl = 0d0
