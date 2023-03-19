@@ -77,7 +77,6 @@ contains
       integer :: sw_vertex_mass
       integer                                         :: dimension
 
-      integer :: num_omp_threads = 12
 
       if (.not. present(cyl_optional)) then
          cyl = 0d0
@@ -115,17 +114,10 @@ contains
       else
          call coordinates%Point_to_data(x, y, z)
 
-         call omp_set_num_threads(num_omp_threads)
 
          is_neg = 0
          nz = this%d3
-         !$omp parallel do collapse(3) &
-         !$omp private(k,j,i, &
-         !$omp         ip,jp,kp, &
-         !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
-         !$omp         y1,y2,y3,y4,y5,y6,y7,y8, &
-         !$omp         z1,z2,z3,z4,z5,z6,z7,z8) &
-         !$omp shared(nz,ny,nx,x,y,z,vol)
+         
          do k = 1, nz
             do j = 1, ny
                do i = 1, nx
@@ -170,7 +162,6 @@ contains
                end do
             end do
          end do
-         !$omp end parallel do
       end if
    end subroutine Calculate
 

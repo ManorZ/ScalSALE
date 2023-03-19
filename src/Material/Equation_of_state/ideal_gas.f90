@@ -53,14 +53,11 @@ contains
       real(8) :: atomic_weight 
       integer :: i, j, k
 
-      integer :: num_omp_threads = 12
 
       gamma1 = gamma_gas - 1d0
       atomic_weight = atomic_mass / AVOGADRO
 
-      call omp_set_num_threads(num_omp_threads)
 
-      !$omp parallel do collapse(3) private(k,j,i)
       do k = 1, nz
          do j = 1, ny
             do i = 1, nx
@@ -85,7 +82,6 @@ contains
             end do
          end do
       end do
-      !$omp end parallel do
 
       end subroutine Calculate_ideal_gas
 

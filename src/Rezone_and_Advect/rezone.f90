@@ -237,7 +237,6 @@ contains
       integer :: nzpp, nypp, nxpp
       integer :: nzp, nyp, nxp
 
-      integer :: num_omp_threads = 12
 
       call this%velocity%Point_to_data(velocity_x, velocity_y, velocity_z)
       call this%mesh%Point_to_data(x, y, z)
@@ -246,13 +245,11 @@ contains
       call this%mesh_velocity%Point_to_data(mesh_velocity_x, mesh_velocity_y, mesh_velocity_z)
       call this%vertex_mass%Point_to_data(vertex_mass)
 
-      call omp_set_num_threads(num_omp_threads)
       
       nzpp = this%nzp + 1
       nypp = this%nyp + 1
       nxpp = this%nxp + 1
 
-      !$omp parallel do collapse(3) private(k,j,i)
       do k = 0, nzpp
          do j = 0, nypp
             do i = 0, nxpp
@@ -262,7 +259,6 @@ contains
             end do
          end do
       end do
-      !$omp end parallel do
 
       call this%material_volume%Calculate(this%material_coordinates)
       call this%material_volume%Exchange_virtual_space_nonblocking()
@@ -271,7 +267,6 @@ contains
       nyp = this%nyp
       nxp = this%nxp
 
-      !$omp parallel do collapse(3) private(k,j,i)
       do k = 1, nzp
          do j = 1, nyp
             do i = 1, nxp
@@ -288,11 +283,9 @@ contains
             end do
          end do
       end do
-      !$omp end parallel do
 
       select case (this%rezone_type)
          case(0)
-            !$omp parallel do collapse(3) private(k,j,i)
             do k = 1, nzp
                do j = 1, nyp
                   do i = 1, nxp
@@ -302,9 +295,7 @@ contains
                   end do
                end do
             end do
-            !$omp end parallel do
          case(1)
-            !$omp parallel do collapse(3) private(k,j,i)
             do k = 1, nzp
                do j = 1, nyp
                   do i = 1, nxp
@@ -314,7 +305,6 @@ contains
                   end do
                end do
             end do
-            !$omp end parallel do
          case default
       end select
 

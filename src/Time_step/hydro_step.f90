@@ -469,7 +469,6 @@ contains
         integer :: tmp_mat  
         integer :: i, j, k, nz, ny, nx, nmats
 
-        integer :: num_omp_threads = 12
 
 
 
@@ -516,7 +515,6 @@ contains
 
         call this%Calculate_density(this%total_volume)
 
-        call omp_set_num_threads(num_omp_threads)
 
 
         sound_vel   = 1d-20
@@ -530,7 +528,6 @@ contains
         nx = this%nx
         nmats = this%nmats
         
-        !!$omp parallel do collapse(3) private(k,j,i,tmp_mat)
         !do k = 1, nz
         !    do j = 1, ny
         !        do i = 1, nx
@@ -545,7 +542,6 @@ contains
         !        end do
         !    end do
         !end do
-        !!$omp end parallel do
 
 
 
@@ -565,7 +561,6 @@ contains
         call this%materials%Apply_eos(this%nx, this%ny, this%nz, this%emf, .true.)
 
 
-        !$omp parallel do collapse(1) private(k,j,i,tmp_mat)
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -582,12 +577,10 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
 
         call this%total_pressure%Exchange_virtual_space_nonblocking()
         call this%total_density%Apply_boundary(.false.)
 
-        !$omp parallel do collapse(1) private(k,j,i)
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -598,13 +591,11 @@ contains
                 end do
             end do
         end do
-        !omp end parallel do
 
         deallocate(dt_de_temp)
 
         call this%total_pressure%Exchange_end()
         
-        !$omp parallel do collapse(1) private(k,j,i)
         do k = 0, this%nzp
             do j = 0, this%nyp
                 do i = 0, this%nxp
@@ -612,7 +603,6 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
 
 
 
@@ -683,7 +673,6 @@ contains
         ny = this%ny
         nx = this%nx
         
-        !$omp parallel do collapse(1) private(k,j,i)
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -697,7 +686,6 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
 
         !do k = 1, this%nz
         !    do j = 1, this%ny
@@ -820,7 +808,6 @@ contains
         real(8) :: z1, z2, z3, z4, z5, z6
         real(8) :: ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8
         
-        integer :: num_omp_threads = 12
 
         call this%acceleration%Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%mesh        %Point_to_data(x, y, z)
@@ -828,9 +815,8 @@ contains
         call this%total_pressure_sum  %Point_to_data(pressure_sum)
         call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
 
-        call omp_set_num_threads(num_omp_threads)
         
-        !$omp parallel do collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
+        !$omp target teams distribute parallel do simd schedule(simd:static) private(k,j,i,ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -903,8 +889,7 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
-
+        !$omp end target teams distribute parallel do simd
 
 
 
@@ -1154,7 +1139,6 @@ contains
         integer :: nx, ny, nz
         real(8) :: emf
         
-        integer :: num_omp_threads = 12
 
         call this%a_visc%Update_visc_factors()
         linear_visc_fac => this%a_visc%xl_visc_mat
@@ -1192,26 +1176,13 @@ contains
         time%dt_cour = 1d20
         call this%acceleration%Exchange_end()
 
-        call omp_set_num_threads(num_omp_threads)
 
         nx = this%nx
         ny = this%ny
         nz = this%nz
         emf = this%emf
 
-        !$omp parallel do collapse(1) &
-        !$omp private(k,j,i,ip,jp,kp, &
-        !$omp         avg_acc_x,avg_acc_y,avg_acc_z,tot_acc, &
-        !$omp         r1,r2,r3,r4,r5,r6,r7,r8, &
-        !$omp         eff_length, &
-        !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
-        !$omp         x_avg, &
-        !$omp         y1,y2,y3,y4,y5,y6,y7,y8, &
-        !$omp         y_avg, &
-        !$omp         z1,z2,z3,z4,z5,z6,z7,z8, &
-        !$omp         z_avg, &
-        !$omp         eff_vel_div, quad_visc_fac, quad_visc_fac_temp,linear_visc_fac_temp) &
-        !$omp shared(nx,ny,nz,vof,emf,pressure,a_visc,acceleration_x,acceleration_y,acceleration_z,mesh_type,i_sphere,x,y,z,dvel_x_dx,dvel_x_dy,dvel_x_dz,dvel_y_dx,dvel_y_dy,dvel_y_dz,dvel_z_dx,dvel_z_dy,dvel_z_dz,density,sound_vel,dt_cour_temp)
+        
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -1341,7 +1312,6 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
         call this%a_visc%Exchange_virtual_space_nonblocking()
         time%dt_cour = sqrt(time%dt_cour) / time%dt_cour_fac
     end subroutine Calculate_artificial_viscosity_3d
@@ -1448,7 +1418,6 @@ contains
         real(8) :: r1, r2, r3, r4, r5, r6, r7, r8
         real(8) :: av1, av2, av3, av4, av5, av6, av7, av8
         
-        integer :: num_omp_threads = 12
         
         call this%acceleration   %Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%velocity       %Point_to_data(velocity_x, velocity_y, velocity_z)
@@ -1460,9 +1429,7 @@ contains
 
         call this%a_visc%Exchange_end()
         
-        call omp_set_num_threads(num_omp_threads)
         
-        !$omp parallel do collapse(1)                       private(ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,av1,av2,av3,av4,av5,av6,av7,av8)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -1538,7 +1505,6 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
 
         if (this%mesh%mesh_type /= 2) then
             call this%velocity%Impose_spherical_symmetry(this%mesh%coordinates)
@@ -1844,7 +1810,6 @@ contains
 
         integer :: i, j, k, tmp_mat, nz, ny, nx, nmats
 
-        integer :: num_omp_threads = 12
 
         call this%velocity         %Point_to_data(velocity_x, velocity_y, velocity_z)
         call this%mesh             %Point_to_data(x, y, z)
@@ -1871,20 +1836,12 @@ contains
         call this%materials%sie        %Point_to_data(sie_vof)
         call this%materials%vof        %Point_to_data(mat_vof)
 
-        call omp_set_num_threads(num_omp_threads)
         
         nz = this%nz
         ny = this%ny
         nx = this%nx
         nmats = this%nmats
-        !$omp parallel do collapse(1) &
-        !$omp private(k,j,i,tmp_mat, &
-        !$omp         vol_diff,vol_diff_stress, &
-        !$omp         a_visc_temp, &
-        !$omp         sie_vof_temp, &
-        !$omp         pressure_temp,dp_de_temp,dp_drho_temp,mass_vof_temp, &
-        !$omp         vol_diff_vof_temp,vol_vof_temp,stress_fac,vol_diff_vof_stress_temp, &
-        !$omp         sie_diff)
+        
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -1933,7 +1890,6 @@ contains
                 end do
             end do
         end do
-        !$omp end parallel do
 
         call this%total_sie%Exchange_virtual_space_nonblocking()
 

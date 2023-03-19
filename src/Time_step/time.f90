@@ -308,7 +308,6 @@ contains
       real(8) :: vel_diff_coor_diff_j  
       real(8) :: vel_diff_coor_diff_k
       
-      integer :: num_omp_threads = 12
 
       call mesh%Point_to_data(x, y, z)
       call velocity%Point_to_data(velocity_x, velocity_y, velocity_z)
@@ -321,9 +320,7 @@ contains
       ny = velocity%d2 - 1
       nz = velocity%d3 - 1
 
-      call omp_set_num_threads(num_omp_threads)
 
-      !$omp parallel do collapse(3) private(k,j,i,vel_diff_coor_diff_i,vel_diff_coor_diff_j,vel_diff_coor_diff_k,vel_grad)
       do k = 1, nz
          do j = 1, ny
             do i = 1, nx
@@ -352,17 +349,14 @@ contains
                vel_grad = max(abs(vel_diff_coor_diff_i), abs(vel_diff_coor_diff_j), abs(vel_diff_coor_diff_k))
 
                if (vel_grad >= vel_grad_max) then 
-                  !!$omp critical
                   vel_grad_max  = vel_grad
                   this%i_grad = i
                   this%j_grad = j
                   this%k_grad = k
-                  !!$omp end critical
                end if
             end do
          end do
       end do
-      !$omp end parallel do
 
       if (vel_grad_max /= 0) this%dt_grad = this%dt_factor / vel_grad_max 
    end subroutine Calculate_vel_grad_dt_3d
@@ -509,7 +503,6 @@ contains
       integer :: i, j, k 
       logical :: is_wall_x_top, is_wall_x_bot,is_wall_y_top, is_wall_y_bot,is_wall_z_top,is_wall_z_bot
 
-      integer :: num_omp_threads = 12
 
       is_wall_x_top = this%parallel_params%is_wall_x_top
       is_wall_x_bot = this%parallel_params%is_wall_x_bot
@@ -530,10 +523,8 @@ contains
       nyp = vert_mass%d2
       nzp = vert_mass%d3
 
-      call omp_set_num_threads(num_omp_threads)
 
       vel_rez_max = -1d20
-      !$omp parallel do collapse(3) private(k,j,i,vel_diff_x,vel_diff_y,vel_diff_z,len_sq,vel_grad_i_p,vel_grad_j_p,vel_grad_k_p,vel_grad_i_m,vel_grad_j_m,vel_grad_k_m,vel_grad)
       do k = 1, nzp
          do j = 1, nyp
             do i = 1, nxp
@@ -616,17 +607,14 @@ contains
 
                vel_grad = max(vel_grad_i_m, vel_grad_j_m, vel_grad_k_m, vel_grad_i_p, vel_grad_j_p, vel_grad_k_p)
                if (vel_rez_max < vel_grad) then
-                  !!$omp critical
                   vel_rez_max = vel_grad
                   this%i_rez  = i
                   this%j_rez  = j
                   this%k_rez  = k
-                  !!$omp end critical
                end if
             end do
          end do
       end do
-      !$omp end parallel do
 
 
 

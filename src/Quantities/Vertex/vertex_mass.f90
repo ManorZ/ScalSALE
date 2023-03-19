@@ -163,7 +163,6 @@ contains
       logical :: wall_x_top, wall_x_bot, wall_y_top, wall_y_bot, wall_z_top, wall_z_bot
       integer :: nxp,nyp,nzp
 
-      integer :: num_omp_threads = 12
 
       nxp = this%d1
       nyp = this%d2
@@ -188,9 +187,7 @@ contains
 
       vertex_mass(1:nxp, 1:nyp , 1:nzp) = 0d0
 
-      call omp_set_num_threads(num_omp_threads)
 
-      !$omp parallel do collapse(3) private(k,j,i,t,kk,jj,ii,i1,i2,i3,j1,j2,j3,k1,k2,k3)
       do k = 1, nzp
          do j = 1, nyp
             do i = 1, nxp
@@ -229,7 +226,6 @@ contains
             end do
          end do
       end do
-      !$omp end parallel do
 
 cyc = cyc + 1
    end subroutine Calculate_vertex_mass_3d

@@ -110,7 +110,6 @@ contains
 
       integer                                                        :: dimension
 
-      integer :: num_omp_threads = 12
 
       if (this%dimension == 2) then
          call velocity%Point_to_data(velocity_x, velocity_y)
@@ -142,9 +141,7 @@ contains
          d3 = this%d2
          d3 = this%d1
 
-         call omp_set_num_threads(num_omp_threads)
 
-         !$omp parallel do collapse(3) private(k,j,i)
          do k = 1, d3
             do j = 1, d2
                do i = 1, d1
@@ -154,7 +151,6 @@ contains
                end do
             end do
          end do
-         !$omp end parallel do
       end if
    end subroutine Calculate
 
