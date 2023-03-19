@@ -946,17 +946,17 @@ contains
         class(problem_t), intent(inout)   :: this
         integer         , intent(in)      :: max_threads
 
-        integer :: threads
+        !integer :: threads
 
-        call omp_set_num_threads(max_threads)
+        !call omp_set_num_threads(max_threads)
 
-        threads = omp_get_num_threads()
+        !threads = omp_get_num_threads()
 
-        if (threads /= max_threads) then
-            write(*,*) "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-            write(*,*) "Warning, number of threads doesn't match number of threads set in datafile"
-            write(*,*) "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-        end if
+        !if (threads /= max_threads) then
+        !    write(*,*) "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+        !    write(*,*) "Warning, number of threads doesn't match number of threads set in datafile"
+        !    write(*,*) "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+        !end if
     end subroutine Initialize_openmp
 
 

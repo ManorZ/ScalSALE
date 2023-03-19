@@ -1,0 +1,4 @@
+ 0
+  making sedov-taylor
+ done mesh
+ Done diagnostics

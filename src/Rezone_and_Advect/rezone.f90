@@ -252,8 +252,7 @@ contains
       nypp = this%nyp + 1
       nxpp = this%nxp + 1
 
-      !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
-      !$omp parallel do      collapse(3)                       private(k,j,i)
+      !$omp parallel do collapse(3) private(k,j,i)
       do k = 0, nzpp
          do j = 0, nypp
             do i = 0, nxpp
@@ -264,7 +263,6 @@ contains
          end do
       end do
       !$omp end parallel do
-      !!$omp end parallel do simd
 
       call this%material_volume%Calculate(this%material_coordinates)
       call this%material_volume%Exchange_virtual_space_nonblocking()
@@ -273,8 +271,7 @@ contains
       nyp = this%nyp
       nxp = this%nxp
 
-      !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
-      !$omp parallel do      collapse(3)                       private(k,j,i)
+      !$omp parallel do collapse(3) private(k,j,i)
       do k = 1, nzp
          do j = 1, nyp
             do i = 1, nxp
@@ -292,12 +289,10 @@ contains
          end do
       end do
       !$omp end parallel do
-      !!$omp end parallel do simd
 
       select case (this%rezone_type)
          case(0)
-            !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
-            !$omp parallel do      collapse(3)                       private(k,j,i)
+            !$omp parallel do collapse(3) private(k,j,i)
             do k = 1, nzp
                do j = 1, nyp
                   do i = 1, nxp
@@ -308,10 +303,8 @@ contains
                end do
             end do
             !$omp end parallel do
-            !!$omp end parallel do simd
          case(1)
-            !!$omp parallel do simd collapse(3) schedule(simd:static) private(k,j,i)
-            !$omp parallel do      collapse(3)                       private(k,j,i)
+            !$omp parallel do collapse(3) private(k,j,i)
             do k = 1, nzp
                do j = 1, nyp
                   do i = 1, nxp
@@ -322,7 +315,6 @@ contains
                end do
             end do
             !$omp end parallel do
-            !!$omp end parallel do simd
          case default
       end select
 

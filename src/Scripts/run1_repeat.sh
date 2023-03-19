@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=ifort_parallel/o3/no_simd/march18
+dir=ifort_parallel/o3/no_simd/pgo/march19
 
 for i in 1 2 3 4 5 
 do
