@@ -53,7 +53,7 @@ contains
       real(8) :: atomic_weight 
       integer :: i, j, k
 
-      integer :: num_omp_threads = 24
+      integer :: num_omp_threads = 6
 
       gamma1 = gamma_gas - 1d0
       atomic_weight = atomic_mass / AVOGADRO

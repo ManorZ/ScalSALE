@@ -469,7 +469,7 @@ contains
         integer :: tmp_mat  
         integer :: i, j, k, nz, ny, nx, nmats
 
-        integer :: num_omp_threads = 24
+        integer :: num_omp_threads = 6
 
 
 
@@ -820,7 +820,7 @@ contains
         real(8) :: z1, z2, z3, z4, z5, z6
         real(8) :: ps1, ps2, ps3, ps4, ps5, ps6, ps7, ps8
         
-        integer :: num_omp_threads = 24
+        integer :: num_omp_threads = 6
 
         call this%acceleration%Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%mesh        %Point_to_data(x, y, z)
@@ -1154,7 +1154,7 @@ contains
         integer :: nx, ny, nz
         real(8) :: emf
         
-        integer :: num_omp_threads = 24
+        integer :: num_omp_threads = 6
 
         call this%a_visc%Update_visc_factors()
         linear_visc_fac => this%a_visc%xl_visc_mat
@@ -1448,7 +1448,7 @@ contains
         real(8) :: r1, r2, r3, r4, r5, r6, r7, r8
         real(8) :: av1, av2, av3, av4, av5, av6, av7, av8
         
-        integer :: num_omp_threads = 24
+        integer :: num_omp_threads = 6
         
         call this%acceleration   %Point_to_data(acceleration_x, acceleration_y, acceleration_z)
         call this%velocity       %Point_to_data(velocity_x, velocity_y, velocity_z)
@@ -1844,7 +1844,7 @@ contains
 
         integer :: i, j, k, tmp_mat, nz, ny, nx, nmats
 
-        integer :: num_omp_threads = 24
+        integer :: num_omp_threads = 6
 
         call this%velocity         %Point_to_data(velocity_x, velocity_y, velocity_z)
         call this%mesh             %Point_to_data(x, y, z)

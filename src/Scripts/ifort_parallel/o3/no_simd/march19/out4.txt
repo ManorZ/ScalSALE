@@ -3,15 +3,15 @@
  done mesh
  Done diagnostics
  finished building problem
- Cycle time:    1.62132906913757     
- Cycle time:    1.23162889480591     
- Cycle time:    1.24283885955811     
- Cycle time:    1.24427294731140     
- Cycle time:    1.23470807075500     
- Cycle time:    1.29225397109985     
- Cycle time:    1.24792695045471     
- Cycle time:    1.23471093177795     
- Cycle time:    1.26328921318054     
- Cycle time:    1.25021314620972     
- Total Time:   12.9192230701447     
+ Cycle time:    1.12032890319824     
+ Cycle time:    1.03163599967957     
+ Cycle time:    1.02661800384521     
+ Cycle time:    1.02988386154175     
+ Cycle time:    1.03084802627563     
+ Cycle time:    1.03002190589905     
+ Cycle time:    1.04394483566284     
+ Cycle time:    1.03167605400085     
+ Cycle time:    1.03621006011963     
+ Cycle time:    1.03879785537720     
+ Total Time:   10.4772069454193     
  ncyc:           10
