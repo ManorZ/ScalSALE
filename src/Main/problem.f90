@@ -712,6 +712,20 @@ contains
             end do
 
         else if (this%mesh%dimension == 3) then
+            !$omp target data map(from:this%hydro%velocity%dvelocity_x_dx, &
+            !$omp                      this%hydro%velocity%dvelocity_x_dy, &
+            !$omp                      this%hydro%velocity%dvelocity_x_dz, &
+            !$omp                      this%hydro%velocity%dvelocity_y_dx, &
+            !$omp                      this%hydro%velocity%dvelocity_y_dy, &
+            !$omp                      this%hydro%velocity%dvelocity_y_dz, &
+            !$omp                      this%hydro%velocity%dvelocity_z_dx, &
+            !$omp                      this%hydro%velocity%dvelocity_z_dy, &
+            !$omp                      this%hydro%velocity%dvelocity_z_dz, &
+            !$omp                 to:this%hydro%velocity%velocity_x, &
+            !$omp                    this%hydro%velocity%velocity_y, &
+            !$omp                    this%hydro%velocity%velocity_z, &
+            !$omp                    this%hydro%mesh%coordinates, &
+            !$omp                    this%hydro%total_volume)
             do while (this%time%Should_continue() .and. ncyc < max_ncyc)
                 reem_start = omp_get_wtime()
                 call this%hydro%do_time_step_3d(this%time)

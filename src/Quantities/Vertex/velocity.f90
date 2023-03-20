@@ -223,22 +223,12 @@ contains
         call coordinates %Point_to_data(x, y, z)
         !call total_vof   %Point_to_data(vof)
         call total_volume%Point_to_data(vol)
-        
-        !$omp target map(from:this%hydro%velocity%dvelocity_x_dx, &
-        !$omp                 this%hydro%velocity%dvelocity_x_dy, &
-        !$omp                 this%hydro%velocity%dvelocity_x_dz, &
-        !$omp                 this%hydro%velocity%dvelocity_y_dx, &
-        !$omp                 this%hydro%velocity%dvelocity_y_dy, &
-        !$omp                 this%hydro%velocity%dvelocity_y_dz, &
-        !$omp                 this%hydro%velocity%dvelocity_z_dx, &
-        !$omp                 this%hydro%velocity%dvelocity_z_dy, &
-        !$omp                 this%hydro%velocity%dvelocity_z_dz, &
-        !$omp            to:this%hydro%velocity%velocity_x, &
-        !$omp               this%hydro%velocity%velocity_y, &
-        !$omp               this%hydro%velocity%velocity_z, &
-        !$omp               this%hydro%mesh%coordinates, &
-        !$omp               this%hydro%total_volume) &
-        !$omp loop &
+        !$omp target update to(this%velocity_x, &
+        !$omp                  this%velocity_y, &
+        !$omp                  this%velocity_z, &
+        !$omp                  coordinates, &
+        !$omp                  total_volume)
+        !$omp target loop &
         !$omp private(ip,jp,kp, &
         !$omp         x1,x2,x3,x4,x5,x6,x7,x8, &
         !$omp         y1,y2,y3,y4,y5,y6,y7,y8, &
@@ -492,8 +482,16 @@ contains
                 end do
             end do
         end do
-        !$omp end loop
-        !$omp end target
+        !$omp end target loop
+        !omp target update from(this%dvelocity_x_dx, &
+        !omp                    this%dvelocity_x_dy, &
+        !omp                    this%dvelocity_x_dz, &
+        !omp                    this%dvelocity_y_dx, &
+        !omp                    this%dvelocity_y_dy, &
+        !omp                    this%dvelocity_y_dz, &
+        !omp                    this%dvelocity_z_dx, &
+        !omp                    this%dvelocity_z_dy, &
+        !omp                    this%dvelocity_z_dz)
         cntr = cntr  + 1
     end subroutine Calculate_derivatives
 
