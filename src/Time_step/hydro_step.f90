@@ -406,9 +406,9 @@ contains
 
         call time%Calculate_dt(this%mesh, this%velocity, this%rezone%mesh_velocity, this%vertex_mass, this%total_vof, this%emfm)
         this%cyc_delete = this%cyc_delete+1
-
+        
         call this%Calculate_acceleration_3d(time%dt_mid)
-
+        
         call this%Calculate_artificial_viscosity_3d(time)
 
         call this%Calculate_velocity_3d(time%dt_mid)
@@ -815,8 +815,6 @@ contains
         call this%total_pressure_sum  %Point_to_data(pressure_sum)
         call this%inversed_vertex_mass%Point_to_data(inversed_vertex_mass)
 
-        
-        !$omp target teams distribute parallel do simd schedule(simd:static) private(k,j,i,ip,im,jp,jm,kp,km,x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6,z1,z2,z3,z4,z5,z6,ps1,ps2,ps3,ps4,ps5,ps6,ps7,ps8)
         do k = 1, this%nzp
             do j = 1, this%nyp
                 do i = 1, this%nxp
@@ -889,10 +887,7 @@ contains
                 end do
             end do
         end do
-        !$omp end target teams distribute parallel do simd
-
-
-
+        
         call this%acceleration%Apply_boundary(this%mesh%coordinates%data, is_blocking=.false.)
 
 

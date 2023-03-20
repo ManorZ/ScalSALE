@@ -712,7 +712,6 @@ contains
             end do
 
         else if (this%mesh%dimension == 3) then
-            !$omp target enter data map(to:this%mesh,this%total_pressure_sum,this%acceleration,this%inversed_vertex_mass)
             do while (this%time%Should_continue() .and. ncyc < max_ncyc)
                 reem_start = omp_get_wtime()
                 call this%hydro%do_time_step_3d(this%time)
@@ -723,7 +722,6 @@ contains
                 write(*,*) "Cycle time: ", omp_get_wtime()-reem_start
             !      call this%cr%Checkpoint(ckpt_name)
             end do
-            !$omp end target exit data map(from:this%total_pressure, this%velocity, this%total_cell_mass, this%total_sie)
         end if
 
         !print some cell quantities at the end of the calculation to help you debug your code.
